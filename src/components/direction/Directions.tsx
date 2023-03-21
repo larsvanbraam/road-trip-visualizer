@@ -27,6 +27,8 @@ function Directions({ data }: DirectionProps) {
   >(() => data.at(data.length - 1) ?? {}, [data]);
 
   const id = useMemo(() => `${startDayNumber}.${endDayNumber}`, [startDayNumber, endDayNumber]);
+
+  const stopCount = useMemo(() => Object.entries(data).length, [data]);
   const waypoints = useMemo(
     () =>
       data.reduce(
@@ -36,11 +38,11 @@ function Directions({ data }: DirectionProps) {
             ...(afternoonLocation
               ? afternoonLocation.split('|').map((location) => ({ location, stopover: false }))
               : []),
-            { location: eveningLocation },
+            stopCount > 1 ? { location: eveningLocation } : undefined,
           ].filter(Boolean) as Array<google.maps.DirectionsWaypoint>,
         [] as Array<google.maps.DirectionsWaypoint>,
       ),
-    [data],
+    [stopCount, data],
   );
 
   const onDirectionsCallback = useCallback(
