@@ -67,10 +67,8 @@ Simply enable Google Sheets Api for your API key.
 The next step is to create a .env file with the newly fetched credentials.
 
 ```javascript
-REACT_APP_GOOGLE_MAPS_API_KEY=[ADD_GOOGLE_MAPS_KEY_HERE]
-REACT_APP_SHEET_ID=[ADD_SHEET_ID_HERE]
-REACT_APP_TAB_NAME=Stops
-REACT_APP_OUTPUT_PATH=./src/asset/
+VITE_GOOGLE_API_KEY = [ADD_GOOGLE_MAPS_KEY_HERE];
+VITE_TAB_NAME = Stops;
 ```
 
 ## Available Scripts

@@ -37,19 +37,19 @@ export function Home() {
     error,
     refetch: refreshData,
   } = useGoogleSheets({
-    apiKey: process.env.REACT_APP_GOOGLE_API_KEY ?? '',
+    apiKey: import.meta.env.VITE_GOOGLE_API_KEY ?? '',
     sheetId,
   });
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_API_KEY ?? '',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_API_KEY ?? '',
   });
 
   const roadTripData = useMemo(
     () =>
       parseGoogleSheetData(
-        rawSheetData.find(({ id }) => id === process.env.REACT_APP_TAB_NAME) ?? {
+        rawSheetData.find(({ id }) => id === import.meta.env.VITE_TAB_NAME) ?? {
           data: [],
           id: '',
         },

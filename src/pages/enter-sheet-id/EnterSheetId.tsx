@@ -25,10 +25,11 @@ export function EnterSheetId() {
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_API_KEY ?? '',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_API_KEY ?? '',
   });
 
   const setSheetIds = useSetRecoilState(sheetIdsState);
+
   const setSheetId = useSetRecoilState(activeSheetIdState);
 
   const textField = useRef<HTMLDivElement>(null);

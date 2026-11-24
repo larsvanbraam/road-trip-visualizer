@@ -1,5 +1,7 @@
-import { Sheet } from 'use-google-sheets/dist/types';
+import type useGoogleSheets from 'use-google-sheets';
 import { RoadTrip, RoadTripStop } from '../types/roadTrip.types';
+
+type Sheet = ReturnType<typeof useGoogleSheets>['data'][number];
 
 /**
  * Map the Google Sheet columns to something we can use in the application
@@ -24,7 +26,7 @@ export function parseGoogleSheetData({ data }: Sheet): RoadTrip {
       const mappedKey = sheetColumnToRoadTripColumn[key];
 
       if (mappedKey) {
-        accumulator[sheetColumnToRoadTripColumn[key]] = value;
+        accumulator[mappedKey] = String(value);
       }
       return accumulator;
     }, {} as RoadTripStop),

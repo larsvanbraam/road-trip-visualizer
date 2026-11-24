@@ -3,7 +3,7 @@ import { Home } from '../pages/home/Home';
 import { EnterSheetId } from '../pages/enter-sheet-id/EnterSheetId';
 import React from 'react';
 
-export const enum RouterLink {
+export enum RouterLink {
   Home = '/',
   EnterSheetId = '/enter-sheet-id',
 }

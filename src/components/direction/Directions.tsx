@@ -57,9 +57,16 @@ function Directions({ data }: DirectionProps) {
     [destination, id, origin],
   );
 
-  const onDirectionsRendererCallback = useCallback((renderer: google.maps.DirectionsRenderer) => {
-    directionsRenderer.current = renderer;
+  const onMouseover = useCallback(() => {
+    console.log('mouse over');
   }, []);
+
+  const onDirectionsRendererCallback = useCallback(
+    (renderer: google.maps.DirectionsRenderer) => {
+      directionsRenderer.current = renderer;
+    },
+    [onMouseover],
+  );
 
   useEffect(() => {
     setDirections(cachedDirections.current.get(id) ?? null);
