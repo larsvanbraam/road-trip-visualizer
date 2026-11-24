@@ -1,17 +1,21 @@
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { FileText, Trash2 } from 'lucide-react';
 import React, { Fragment, useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ErrorAlert } from '../../components/error-alert/ErrorAlert';
+import { UserFacingError } from '../../utils/errors';
 import { env } from '../../config/env';
 import { promoteSheetId } from '../../utils/sheetHistory';
 import { useSheetStore } from '../../state/sheetState';
 
 export function EnterSheetId() {
   const navigate = useNavigate();
+  // Set by the home page when loading the sheet failed
+  const error = (useLocation().state as { error?: UserFacingError } | null)?.error;
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -89,6 +93,7 @@ export function EnterSheetId() {
       <main className="absolute inset-0 flex size-full items-center justify-center">
         <div className="flex min-w-[400px] flex-col items-start rounded-[10px] bg-card p-8 text-card-foreground shadow-lg">
           <h1 className="mb-4 text-2xl font-medium">Enter the Google Sheet id</h1>
+          {error && <ErrorAlert className="mb-4" error={error} />}
           <form
             onSubmit={onSubmit}
             className={`flex w-full flex-col gap-2 ${sheetIds.length > 0 ? 'mb-8' : ''}`}

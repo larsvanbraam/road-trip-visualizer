@@ -1,4 +1,6 @@
 import { Loader2, X } from 'lucide-react';
+import { ErrorAlert } from '../../components/error-alert/ErrorAlert';
+import { describeMissingTab, describeSheetError, UserFacingError } from '../../utils/errors';
 import { Button } from '@/components/ui/button';
 import { env } from '../../config/env';
 import Navigation, { MapSize } from '../../components/navigation/Navigation';
@@ -40,7 +42,7 @@ export function Home() {
     sheetId,
   });
 
-  const { isLoaded: isMapLoaded } = useJsApiLoader({
+  const { isLoaded: isMapLoaded, loadError: mapLoadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: env.googleApiKey,
   });
@@ -57,6 +59,7 @@ export function Home() {
   );
 
   const [activeDay, setActiveDay] = useState<string>();
+  const [routeError, setRouteError] = useState<UserFacingError>();
 
   const travelDayData = useMemo(
     () => roadTripData.filter((day) => Number(day.distance.replace(' km', '')) > 0),
@@ -72,6 +75,7 @@ export function Home() {
   const onShowRouteClick = useCallback(
     (day: string) => {
       setActiveDay(activeDay === day ? undefined : day);
+      setRouteError(undefined);
     },
     [activeDay],
   );
@@ -90,8 +94,28 @@ export function Home() {
     element.style.height = height;
   }, []);
 
-  if (error || !sheetId) {
+  if (!sheetId) {
     return <Navigate to="/enter-sheet-id" replace />;
+  }
+
+  if (error) {
+    return <Navigate to="/enter-sheet-id" replace state={{ error: describeSheetError(error) }} />;
+  }
+
+  // The sheet loaded, but it does not contain the tab with the stops
+  if (!isDataLoading && !rawSheetData.some(({ id }) => id === env.tabName)) {
+    return (
+      <Navigate
+        to="/enter-sheet-id"
+        replace
+        state={{
+          error: describeMissingTab(
+            env.tabName,
+            rawSheetData.map(({ id }) => id),
+          ),
+        }}
+      />
+    );
   }
 
   return (
@@ -113,7 +137,18 @@ export function Home() {
           />
         </div>
         <div className="map-grid relative min-h-96 md:w-2/3 lg:w-3/4 xl:w-5/6">
-          {!isDataLoading && isMapLoaded ? (
+          {mapLoadError ? (
+            <div className="flex h-screen items-center justify-center p-8">
+              <ErrorAlert
+                className="max-w-md"
+                error={{
+                  title: 'Google Maps failed to load',
+                  message:
+                    'Check your internet connection, and that the API key allows the Maps JavaScript API on this domain.',
+                }}
+              />
+            </div>
+          ) : !isDataLoading && isMapLoaded ? (
             <GoogleMap
               mapContainerClassName="map-container"
               mapContainerStyle={{
@@ -124,7 +159,7 @@ export function Home() {
               zoom={8}
               onLoad={onMapLoaded}
             >
-              <Directions data={activeDirections} />
+              <Directions data={activeDirections} onError={setRouteError} />
             </GoogleMap>
           ) : (
             <div className="flex h-screen flex-col items-center justify-center gap-2">
@@ -133,12 +168,19 @@ export function Home() {
             </div>
           )}
 
+          {routeError && (
+            <ErrorAlert className="absolute top-4 left-4 z-10 max-w-md" error={routeError} />
+          )}
+
           {activeDay && (
             <Button
               size="lg"
               className="absolute right-4 bottom-16 rounded-full bg-destructive text-white hover:bg-destructive/80"
               aria-label="Clear selection"
-              onClick={() => setActiveDay(undefined)}
+              onClick={() => {
+                setActiveDay(undefined);
+                setRouteError(undefined);
+              }}
             >
               <X data-icon="inline-start" />
               Clear selection

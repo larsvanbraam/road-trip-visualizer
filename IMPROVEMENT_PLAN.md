@@ -45,7 +45,8 @@ Status after the Vite+ migration: `vp check` passes with 0 errors (11 lint warni
       `console.log` and an unused dependency).
 - [ ] Add tests with **Vitest** (`vp test`). CRA's tests were already commented out. Start with
       `parseGoogleSheetData` (pure, easy) and the stop-ordering logic.
-- [ ] Add loading/error states for Sheets failures (private sheet, wrong ID, quota).
+- [x] Add loading/error states for Sheets failures (private sheet, wrong ID, quota). Also covers a
+      missing tab, Maps load failures and Directions failures.
 - [ ] Cache Directions API results (in-memory cache exists in `Directions.tsx`; persist to
       `sessionStorage` to cut billed requests on reload).
 - [ ] Tighten types: replace `as RoadTripStop` casts in the parser with a validated mapping (e.g. zod).

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DirectionsRenderer, DirectionsService } from '@react-google-maps/api';
+import { describeDirectionsStatus, UserFacingError } from '../../utils/errors';
 
 type Direction = {
   dayNumber: string;
@@ -11,9 +12,11 @@ type Direction = {
 
 type DirectionProps = {
   data: Array<Direction>;
+  /** Called with the reason when a route cannot be calculated, and without arguments on success */
+  onError?: (error?: UserFacingError) => void;
 };
 
-function Directions({ data }: DirectionProps) {
+function Directions({ data, onError }: DirectionProps) {
   const directionsRenderer = useRef<google.maps.DirectionsRenderer>(undefined);
   const cachedDirections = useRef(new Map<string, google.maps.DirectionsResult>());
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -50,23 +53,17 @@ function Directions({ data }: DirectionProps) {
       if (status === 'OK' && response !== null) {
         cachedDirections.current.set(id, response);
         setDirections(response);
+        onError?.();
       } else {
-        console.log({ origin, destination }, status, response);
+        onError?.(describeDirectionsStatus(status, origin, destination));
       }
     },
-    [destination, id, origin],
+    [destination, id, onError, origin],
   );
 
-  const onMouseover = useCallback(() => {
-    console.log('mouse over');
+  const onDirectionsRendererCallback = useCallback((renderer: google.maps.DirectionsRenderer) => {
+    directionsRenderer.current = renderer;
   }, []);
-
-  const onDirectionsRendererCallback = useCallback(
-    (renderer: google.maps.DirectionsRenderer) => {
-      directionsRenderer.current = renderer;
-    },
-    [onMouseover],
-  );
 
   useEffect(() => {
     setDirections(cachedDirections.current.get(id) ?? null);
