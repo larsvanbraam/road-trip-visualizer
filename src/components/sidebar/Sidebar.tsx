@@ -1,4 +1,8 @@
 import {
+  DriveEta as DriveEtaIcon,
+  FormatListBulleted as FormatListBulletedIcon,
+} from '@mui/icons-material';
+import {
   Box,
   Button,
   Divider,
@@ -7,10 +11,8 @@ import {
   Skeleton,
   Typography,
 } from '@mui/material';
-import DriveEtaIcon from '@mui/icons-material/DriveEta';
 import React from 'react';
 import { RoadTrip } from '../../types/roadTrip.types';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import {
   StyledSidebar,
   StyledSidebarBottom,

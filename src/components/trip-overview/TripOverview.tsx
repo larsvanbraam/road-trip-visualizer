@@ -1,3 +1,4 @@
+import { Directions as DirectionsIcon } from '@mui/icons-material';
 import { RoadTrip, RoadTripStop } from '../../types/roadTrip.types';
 import {
   Button,
@@ -9,7 +10,6 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import DirectionsIcon from '@mui/icons-material/Directions';
 import React, { MutableRefObject, useCallback, useImperativeHandle, useState } from 'react';
 import { StyledTableRow } from './TripOverview.styles';
 

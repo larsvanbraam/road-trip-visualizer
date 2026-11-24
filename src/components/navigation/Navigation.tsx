@@ -1,4 +1,9 @@
 import {
+  Cached as CachedIcon,
+  SwapHoriz as SwapHorizIcon,
+  OpenInNew as OpenInNewIcon,
+} from '@mui/icons-material';
+import {
   AppBar,
   Box,
   Button,
@@ -11,16 +16,12 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import CachedIcon from '@mui/icons-material/Cached';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import * as React from 'react';
 import { Fragment, useCallback, useState } from 'react';
 import { darkTheme } from '../../theme';
 import { Link } from 'react-router-dom';
 import { RouterLink } from '../../config/router';
-import { useRecoilValue } from 'recoil';
-import { activeSheetIdState } from '../../state/sheetState';
+import { useSheetStore } from '../../state/sheetState';
 
 type NavigationProps = {
   onMapSizeChange: (size: MapSize) => void;
@@ -36,7 +37,7 @@ export const enum MapSize {
 
 function Navigation({ onMapSizeChange, onUpdateData, isDataLoading }: NavigationProps) {
   const [mapSize, setMapSize] = useState(MapSize.Cover);
-  const sheetId = useRecoilValue(activeSheetIdState);
+  const sheetId = useSheetStore((state) => state.sheetId);
 
   const onSizeChange = useCallback(
     (event: SelectChangeEvent<MapSize>) => {

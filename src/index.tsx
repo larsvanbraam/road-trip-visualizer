@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { RecoilRoot } from 'recoil';
 import { missingEnvVariables } from './config/env';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
@@ -15,9 +14,5 @@ if (missingEnvVariables.length > 0) {
     </p>,
   );
 } else {
-  root.render(
-    <RecoilRoot>
-      <App />
-    </RecoilRoot>,
-  );
+  root.render(<App />);
 }

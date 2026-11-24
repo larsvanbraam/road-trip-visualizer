@@ -1,4 +1,4 @@
-import PlaceIcon from '@mui/icons-material/Place';
+import { Place as PlaceIcon } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
 import React from 'react';
 import { StyledListLabel, StyledListStop } from './ListStop.styles';

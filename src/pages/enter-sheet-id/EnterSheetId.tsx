@@ -1,3 +1,4 @@
+import { FileOpen as FileOpenIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { env } from '../../config/env';
 import {
   Box,
@@ -14,11 +15,8 @@ import {
 } from '@mui/material';
 import React, { Fragment, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { activeSheetIdState, sheetIdsState } from '../../state/sheetState';
+import { useSheetStore } from '../../state/sheetState';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import FileOpenIcon from '@mui/icons-material/FileOpen';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { EnterSheetIdContainer, EnterSheetIdModal } from './EnterSheetId.styles';
 
 export function EnterSheetId() {
@@ -29,13 +27,13 @@ export function EnterSheetId() {
     googleMapsApiKey: env.googleApiKey,
   });
 
-  const setSheetIds = useSetRecoilState(sheetIdsState);
+  const setSheetIds = useSheetStore((state) => state.setSheetIds);
 
-  const setSheetId = useSetRecoilState(activeSheetIdState);
+  const setSheetId = useSheetStore((state) => state.setSheetId);
 
   const textField = useRef<HTMLDivElement>(null);
   const [localSheetId, setLocalSheetId] = useState<string>('');
-  const sheetIds = useRecoilValue(sheetIdsState);
+  const sheetIds = useSheetStore((state) => state.sheetIds);
 
   const getSheetIdIndex = useCallback(
     (id: string) => sheetIds.findIndex((value) => value === id),

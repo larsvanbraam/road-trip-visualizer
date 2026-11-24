@@ -1,18 +1,17 @@
+import { Clear as ClearIcon } from '@mui/icons-material';
 import { env } from '../../config/env';
 import Navigation, { MapSize } from '../../components/navigation/Navigation';
 import { CircularProgress, Fab, Grid, Typography } from '@mui/material';
 import Sidebar from '../../components/sidebar/Sidebar';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import Directions from '../../components/direction/Directions';
-import ClearIcon from '@mui/icons-material/Clear';
 import ScreenshotButton from '../../components/screenshot-button/ScreenshotButton';
 import TripOverview, { TripOverviewHandles } from '../../components/trip-overview/TripOverview';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
-import { activeSheetIdState } from '../../state/sheetState';
+import { useSheetStore } from '../../state/sheetState';
 import { StyledHome, StyledLoaderContainer, StyledMapContainer } from './Home.styles';
 
 const mapSizeConfiguration = {
@@ -30,7 +29,7 @@ export function Home() {
   const map = useRef<google.maps.Map>();
   const tripOverviewHandles = useRef<TripOverviewHandles>();
 
-  const sheetId = useRecoilValue(activeSheetIdState);
+  const sheetId = useSheetStore((state) => state.sheetId);
 
   const {
     data: rawSheetData,

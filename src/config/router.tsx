@@ -1,20 +1,20 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { Home } from '../pages/home/Home';
-import { EnterSheetId } from '../pages/enter-sheet-id/EnterSheetId';
-import React from 'react';
 
 export enum RouterLink {
   Home = '/',
   EnterSheetId = '/enter-sheet-id',
 }
 
+// Routes are loaded on demand to keep the initial bundle small
 export const router = createBrowserRouter([
   {
     path: RouterLink.Home,
-    element: <Home />,
+    lazy: async () => ({ Component: (await import('../pages/home/Home')).Home }),
   },
   {
     path: RouterLink.EnterSheetId,
-    element: <EnterSheetId />,
+    lazy: async () => ({
+      Component: (await import('../pages/enter-sheet-id/EnterSheetId')).EnterSheetId,
+    }),
   },
 ]);
