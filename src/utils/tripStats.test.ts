@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RoadTrip } from '../types/roadTrip.types';
-import { formatDuration, getTripStats, parseDistanceKm, parseDurationMinutes } from './tripStats';
+import {
+  formatDuration,
+  formatTripDate,
+  getTripStats,
+  parseDistanceKm,
+  parseDurationMinutes,
+  parseViaStops,
+} from './tripStats';
 
 describe('parseDistanceKm', () => {
   it('reads the number from a distance value', () => {
@@ -62,5 +69,27 @@ describe('getTripStats', () => {
 
   it('handles an empty trip', () => {
     expect(getTripStats([])).toEqual({ days: 0, distanceKm: 0, driveMinutes: 0 });
+  });
+});
+
+describe('formatTripDate', () => {
+  it('formats an ISO date', () => {
+    expect(formatTripDate('2026-07-01')).toBe('Wed, Jul 1');
+  });
+
+  it('keeps values it cannot read', () => {
+    expect(formatTripDate('1 July')).toBe('1 July');
+    expect(formatTripDate('')).toBe('');
+    expect(formatTripDate('2026-13-45')).toBe('2026-13-45');
+  });
+});
+
+describe('parseViaStops', () => {
+  it('splits the stops on a pipe and ignores blanks', () => {
+    expect(parseViaStops('Utrecht | Arnhem||')).toEqual(['Utrecht', 'Arnhem']);
+  });
+
+  it('returns nothing for an empty value', () => {
+    expect(parseViaStops('')).toEqual([]);
   });
 });

@@ -49,3 +49,41 @@ export function getTripStats(trip: RoadTrip): TripStats {
     driveMinutes: trip.reduce((total, { time }) => total + parseDurationMinutes(time), 0),
   };
 }
+
+const dateFormat = new Intl.DateTimeFormat('en', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'UTC',
+});
+
+/**
+ * Format an ISO date ("2026-07-01") as "Wed, Jul 1". Other formats are shown as they are in the
+ * sheet, because there is no reliable way to read them.
+ */
+export function formatTripDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+
+  if (!match) return value;
+
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+
+  // Dates like 2026-13-45 roll over into the next year, so check that nothing was changed
+  const isValid =
+    date.getUTCFullYear() === Number(year) &&
+    date.getUTCMonth() === Number(month) - 1 &&
+    date.getUTCDate() === Number(day);
+
+  return isValid ? dateFormat.format(date) : value;
+}
+
+/**
+ * The extra stops of a day, which the sheet separates with a "|"
+ */
+export function parseViaStops(value: string): Array<string> {
+  return value
+    .split('|')
+    .map((stop) => stop.trim())
+    .filter(Boolean);
+}
