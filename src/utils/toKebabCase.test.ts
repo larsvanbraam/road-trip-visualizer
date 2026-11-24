@@ -12,6 +12,10 @@ describe('toKebabCase', () => {
     expect(toKebabCase('fooBarBaz')).toBe('foo-bar-baz');
   });
 
+  it('removes accents instead of splitting words', () => {
+    expect(toKebabCase('Zürich, Kraków')).toBe('zurich-krakow');
+  });
+
   it('returns an empty string when nothing is usable', () => {
     expect(toKebabCase('!!! ???')).toBe('');
   });

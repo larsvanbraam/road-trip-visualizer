@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { DirectionsRenderer, DirectionsService, useGoogleMap } from '@react-google-maps/api';
 import { describeDirectionsStatus, UserFacingError } from '../../utils/errors';
+import { getRouteId } from '../../utils/routeId';
 import { RouteMarkers } from './RouteMarkers';
 
 type Direction = {
@@ -13,8 +14,15 @@ type Direction = {
 
 type DirectionProps = {
   data: Array<Direction>;
-  /** Called with the reason when a route cannot be calculated, and without arguments on success */
-  onError?: (error?: UserFacingError) => void;
+  /**
+   * Called with the reason when a route cannot be calculated, and without an error when it can.
+   * The id is the one of the route it is about, see getRouteId.
+   */
+  onError?: (error?: UserFacingError, routeId?: string) => void;
+  /** Called once the route is drawn and the map is moving to show it */
+  onReady?: (routeId: string) => void;
+  /** Room to keep free around the route, defaults to the space around the floating panel */
+  padding?: google.maps.Padding;
 };
 
 /**
@@ -28,23 +36,20 @@ function getViewportPadding(): google.maps.Padding {
     : { top: 80, right: 40, bottom: window.innerHeight * 0.45 + 40, left: 40 };
 }
 
-function Directions({ data, onError }: DirectionProps) {
+function Directions({ data, onError, onReady, padding }: DirectionProps) {
   const map = useGoogleMap();
+  // Kept in a ref so that a new callback does not make the map fit the route again
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
   const directionsRenderer = useRef<google.maps.DirectionsRenderer>(undefined);
-  const cachedDirections = useRef(new Map<string, google.maps.DirectionsResult>());
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [results, setResults] = useState<Record<string, google.maps.DirectionsResult>>({});
 
-  const { dayNumber: startDayNumber, morningLocation: origin = '' } = useMemo<Partial<Direction>>(
-    () => data.at(0) ?? {},
-    [data],
-  );
-  const { dayNumber: endDayNumber, eveningLocation: destination = '' } = useMemo<
-    Partial<Direction>
-  >(() => data.at(data.length - 1) ?? {}, [data]);
+  const { morningLocation: origin = '' } = data.at(0) ?? {};
+  const { eveningLocation: destination = '' } = data.at(-1) ?? {};
 
-  const id = useMemo(() => `${startDayNumber}.${endDayNumber}`, [startDayNumber, endDayNumber]);
+  const id = useMemo(() => getRouteId(data), [data]);
 
-  const stopCount = useMemo(() => Object.entries(data).length, [data]);
+  const stopCount = data.length;
   const waypoints = useMemo(
     () =>
       data.reduce(
@@ -61,17 +66,27 @@ function Directions({ data, onError }: DirectionProps) {
     [stopCount, data],
   );
 
+  // Results are remembered per route and addresses, so changed addresses are looked up again
+  const cacheKey = useMemo(
+    () => JSON.stringify([id, origin, destination, waypoints]),
+    [id, origin, destination, waypoints],
+  );
+  const latestCacheKey = useRef(cacheKey);
+  latestCacheKey.current = cacheKey;
+
+  const directions = results[cacheKey] ?? null;
+
   const onDirectionsCallback = useCallback(
     (response: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
       if (status === 'OK' && response !== null) {
-        cachedDirections.current.set(id, response);
-        setDirections(response);
-        onError?.();
-      } else {
-        onError?.(describeDirectionsStatus(status, origin, destination));
+        setResults((previous) => ({ ...previous, [cacheKey]: response }));
+        // A late answer for a route that is no longer shown only fills the cache
+        if (cacheKey === latestCacheKey.current) onError?.(undefined, id);
+      } else if (cacheKey === latestCacheKey.current) {
+        onError?.(describeDirectionsStatus(status, origin, destination), id);
       }
     },
-    [destination, id, onError, origin],
+    [cacheKey, destination, id, onError, origin],
   );
 
   const onDirectionsRendererCallback = useCallback((renderer: google.maps.DirectionsRenderer) => {
@@ -79,16 +94,25 @@ function Directions({ data, onError }: DirectionProps) {
   }, []);
 
   useEffect(() => {
-    setDirections(cachedDirections.current.get(id) ?? null);
-  }, [data, id]);
-
-  useEffect(() => {
     const bounds = directions?.routes[0]?.bounds;
 
     if (map && bounds) {
-      map.fitBounds(bounds, getViewportPadding());
+      map.fitBounds(bounds, padding ?? getViewportPadding());
+      onReadyRef.current?.(id);
     }
-  }, [directions, map]);
+  }, [directions, id, map, padding]);
+
+  // Without stable options the service would look the route up again on every render
+  const serviceOptions = useMemo<google.maps.DirectionsRequest>(
+    () => ({
+      origin,
+      destination,
+      waypoints,
+      travelMode: 'DRIVING' as google.maps.TravelMode,
+      unitSystem: google.maps.UnitSystem.METRIC,
+    }),
+    [origin, destination, waypoints],
+  );
 
   if (directions) {
     return (
@@ -109,18 +133,7 @@ function Directions({ data, onError }: DirectionProps) {
     );
   }
 
-  return (
-    <DirectionsService
-      options={{
-        origin,
-        destination,
-        waypoints,
-        travelMode: 'DRIVING' as google.maps.TravelMode,
-        unitSystem: google.maps.UnitSystem.METRIC,
-      }}
-      callback={onDirectionsCallback}
-    />
-  );
+  return <DirectionsService options={serviceOptions} callback={onDirectionsCallback} />;
 }
 
 export default Directions;

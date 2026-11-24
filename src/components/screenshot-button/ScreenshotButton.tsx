@@ -23,7 +23,7 @@ function ScreenshotButton({
     if (!targetElement)
       throw new Error('Target element cannot be found, unable to take screenshot');
 
-    void import('html2canvas')
+    void import('html2canvas-pro')
       .then(({ default: html2canvas }) => html2canvas(targetElement, { useCORS: true }))
       .then((canvas) => {
         const anchor = document.createElement('a');

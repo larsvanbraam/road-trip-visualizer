@@ -63,6 +63,7 @@ Status after the Vite+ migration: `vp check` passes with 0 errors (11 lint warni
 - Shareable URLs (`/?sheet=<id>`) instead of only local state.
 - Per-day stats (distance, drive time totals), elevation and cost estimates.
 - Export trip as GPX/KML.
+- [x] Export screenshots of every travel day as a zip (done).
 - PWA offline support: `manifest.json` already exists, add a service worker.
 - Accessibility pass (keyboard navigation of the day list, contrast on the map overlay).
 

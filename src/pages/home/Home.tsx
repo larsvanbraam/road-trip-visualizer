@@ -7,9 +7,12 @@ import Navigation, { MapSize } from '../../components/navigation/Navigation';
 import Sidebar from '../../components/sidebar/Sidebar';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import Directions from '../../components/direction/Directions';
+import { ExportAllButton } from '../../components/export/ExportAllButton';
+import { ExportOverlay } from '../../components/export/ExportOverlay';
+import { RouteResult, useDayExport } from '../../hooks/useDayExport';
 import ScreenshotButton from '../../components/screenshot-button/ScreenshotButton';
 import TripOverview, { TripOverviewHandles } from '../../components/trip-overview/TripOverview';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
@@ -21,6 +24,10 @@ const mapStyles: Array<google.maps.MapTypeStyle> = [
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
 ];
+
+// Screenshots are framed evenly, there is no floating panel in them
+const EXPORT_PADDING: google.maps.Padding = { top: 60, right: 60, bottom: 60, left: 60 };
+const ROUTE_TIMEOUT_MS = 20_000;
 
 const mapSizeConfiguration = {
   [MapSize.Fixed]: {
@@ -79,6 +86,69 @@ export function Home() {
     [activeDay, roadTripData, travelDayData],
   );
 
+  const showDay = useCallback((day?: string) => {
+    setActiveDay(day);
+    setRouteError(undefined);
+  }, []);
+
+  // What is known about each route, so the export can wait for the route of the day it shows
+  const routeResults = useRef(new Map<string, RouteResult>());
+  const routeWaiters = useRef<Array<{ routeId: string; resolve: (result: RouteResult) => void }>>(
+    [],
+  );
+
+  const settleRoute = useCallback((routeId: string, result: RouteResult) => {
+    routeResults.current.set(routeId, result);
+
+    routeWaiters.current = routeWaiters.current.filter((waiter) => {
+      if (waiter.routeId !== routeId) return true;
+
+      waiter.resolve(result);
+      return false;
+    });
+  }, []);
+
+  const waitForRoute = useCallback(
+    (routeId: string) =>
+      new Promise<RouteResult>((resolve) => {
+        const known = routeResults.current.get(routeId);
+
+        if (known) {
+          resolve(known);
+          return;
+        }
+
+        const timeout = setTimeout(() => resolve('failed'), ROUTE_TIMEOUT_MS);
+
+        routeWaiters.current.push({
+          routeId,
+          resolve: (result) => {
+            clearTimeout(timeout);
+            resolve(result);
+          },
+        });
+      }),
+    [],
+  );
+
+  // New data can mean new addresses, so earlier results no longer say anything
+  useEffect(() => {
+    routeResults.current.clear();
+  }, [roadTripData]);
+
+  const onRouteError = useCallback(
+    (error?: UserFacingError, routeId?: string) => {
+      setRouteError(error);
+      if (error && routeId) settleRoute(routeId, 'failed');
+    },
+    [settleRoute],
+  );
+
+  const onRouteReady = useCallback(
+    (routeId: string) => settleRoute(routeId, 'ready'),
+    [settleRoute],
+  );
+
   const onShowRouteClick = useCallback(
     (day: string) => {
       setActiveDay(activeDay === day ? undefined : day);
@@ -90,6 +160,16 @@ export function Home() {
   const onMapLoaded = useCallback((googleMap: google.maps.Map) => {
     map.current = googleMap;
   }, []);
+
+  const getMap = useCallback(() => map.current, []);
+
+  const dayExport = useDayExport({
+    days: travelDayData,
+    activeDay,
+    getMap,
+    showDay,
+    waitForRoute,
+  });
 
   const onMapSizeChange = useCallback((size: MapSize) => {
     const element = map.current?.getDiv();
@@ -150,7 +230,12 @@ export function Home() {
             zoom={8}
             onLoad={onMapLoaded}
           >
-            <Directions data={activeDirections} onError={setRouteError} />
+            <Directions
+              data={activeDirections}
+              onError={onRouteError}
+              onReady={onRouteReady}
+              padding={dayExport.isExporting ? EXPORT_PADDING : undefined}
+            />
           </GoogleMap>
         ) : (
           <div className="flex flex-col items-center gap-2">
@@ -178,8 +263,11 @@ export function Home() {
         isDataLoading={isDataLoading}
       />
 
-      {routeError && (
-        <ErrorAlert className="absolute top-16 right-3 z-10 max-w-md" error={routeError} />
+      {(dayExport.notice ?? routeError) && (
+        <ErrorAlert
+          className="absolute top-16 right-3 z-10 max-w-md"
+          error={(dayExport.notice ?? routeError)!}
+        />
       )}
 
       <div className="absolute right-4 bottom-8 z-10 flex flex-col items-end gap-2">
@@ -197,8 +285,16 @@ export function Home() {
             Show whole trip
           </Button>
         )}
+        <ExportAllButton
+          onClick={() => void dayExport.start()}
+          disabled={dayExport.isExporting || isDataLoading || travelDayData.length === 0}
+        />
         <ScreenshotButton data={roadTripData} activeDay={activeDay} />
       </div>
+
+      {dayExport.progress && (
+        <ExportOverlay progress={dayExport.progress} onCancel={dayExport.cancel} />
+      )}
 
       {!isDataLoading && (
         <TripOverview
