@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { DirectionsRenderer, DirectionsService, useGoogleMap } from '@react-google-maps/api';
 import { describeDirectionsStatus, UserFacingError } from '../../utils/errors';
+import { RouteMarkers } from './RouteMarkers';
 
 type Direction = {
   dayNumber: string;
@@ -91,10 +92,20 @@ function Directions({ data, onError }: DirectionProps) {
 
   if (directions) {
     return (
-      <DirectionsRenderer
-        options={{ directions, preserveViewport: true }}
-        onLoad={onDirectionsRendererCallback}
-      />
+      <>
+        <DirectionsRenderer
+          options={{
+            directions,
+            preserveViewport: true,
+            // We draw our own markers and cards, see RouteMarkers
+            suppressMarkers: true,
+            suppressInfoWindows: true,
+            polylineOptions: { strokeColor: '#ef6024', strokeOpacity: 0.9, strokeWeight: 5 },
+          }}
+          onLoad={onDirectionsRendererCallback}
+        />
+        <RouteMarkers days={data} directions={directions} />
+      </>
     );
   }
 
