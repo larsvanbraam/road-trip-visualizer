@@ -1,11 +1,13 @@
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import { ArrowRight, FileText, Trash2 } from 'lucide-react';
+import { ArrowRight, FileSpreadsheet, FileText, Trash2 } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SheetSetupDialog } from '../../components/sheet-setup/SheetSetupDialog';
+import { TEMPLATE_COPY_URL } from '../../config/template';
 import { Logo } from '../../components/logo/Logo';
 import { ErrorAlert } from '../../components/error-alert/ErrorAlert';
 import { UserFacingError } from '../../utils/errors';
@@ -34,6 +36,7 @@ export function EnterSheetId() {
   const sheetIds = useSheetStore((state) => state.sheetIds);
 
   const [localSheetId, setLocalSheetId] = useState<string>('');
+  const [isSetupOpen, setIsSetupOpen] = useState(false);
 
   const getSheetIdIndex = useCallback(
     (id: string) => sheetIds.findIndex((value) => value === id),
@@ -119,6 +122,29 @@ export function EnterSheetId() {
             </Button>
           </form>
 
+          <div className="mt-6 flex flex-col gap-3 rounded-xl border border-brand/30 bg-accent/60 p-4 sm:flex-row sm:items-center">
+            <FileSpreadsheet className="size-8 shrink-0 text-brand" aria-hidden />
+            <div className="min-w-0 grow">
+              <p className="font-medium">No sheet yet?</p>
+              <p className="text-sm text-muted-foreground">
+                Start from our template, it works out distances and drive times for you.
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2 sm:flex-col">
+              <a
+                href={TEMPLATE_COPY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({ size: 'sm' })}
+              >
+                Get the template
+              </a>
+              <Button variant="ghost" size="sm" onClick={() => setIsSetupOpen(true)}>
+                How it works
+              </Button>
+            </div>
+          </div>
+
           {sheetIds.length > 0 && (
             <div className="mt-8">
               <h2 className="mb-2 text-sm font-medium text-muted-foreground">Recent sheets</h2>
@@ -180,6 +206,7 @@ export function EnterSheetId() {
         )}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent" />
       </section>
+      <SheetSetupDialog open={isSetupOpen} onOpenChange={setIsSetupOpen} />
     </main>
   );
 }
