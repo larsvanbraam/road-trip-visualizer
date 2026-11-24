@@ -15,5 +15,10 @@ export default defineConfig({
   },
   plugins: lazyPlugins(() => [react(), tailwindcss()]),
   resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    css: false,
+  },
   server: { port: 3000, open: true },
 });

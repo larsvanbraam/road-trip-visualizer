@@ -17,6 +17,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec vp check
+      - run: pnpm exec vp test
       - run: pnpm exec vp build
         env:
           VITE_GOOGLE_API_KEY: ci-placeholder

@@ -81,6 +81,7 @@ your Google API key first.
 | `vp install` | Install dependencies                             |
 | `vp dev`     | Start the dev server on http://localhost:3000    |
 | `vp check`   | Format, lint and type-check (runs on pre-commit) |
+| `vp test`    | Run the Vitest test suite                        |
 | `vp build`   | Production build to `dist/`                      |
 | `vp preview` | Preview the production build                     |
 

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { env } from '../../config/env';
+import { promoteSheetId } from '../../utils/sheetHistory';
 import { useSheetStore } from '../../state/sheetState';
 
 export function EnterSheetId() {
@@ -59,24 +60,11 @@ export function EnterSheetId() {
         throw new Error('No id was provided');
       }
 
-      const index = getSheetIdIndex(newSheetId);
-
-      setSheetIds(
-        index > -1
-          ? // Update the id's so that the new one is the first one.
-            sheetIds.reduce(
-              (accumulator, currentValue) =>
-                currentValue === newSheetId
-                  ? [currentValue, ...accumulator]
-                  : [...accumulator, currentValue],
-              [] as Array<string>,
-            )
-          : (sheetIds) => [newSheetId, ...sheetIds],
-      );
+      setSheetIds((sheetIds) => promoteSheetId(sheetIds, newSheetId));
 
       onSelectSheetId(newSheetId);
     },
-    [setSheetIds, onSelectSheetId, sheetIds, getSheetIdIndex],
+    [setSheetIds, onSelectSheetId],
   );
 
   return (

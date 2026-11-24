@@ -1,6 +1,7 @@
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React, { useCallback } from 'react';
+import { toKebabCase } from '../../utils/toKebabCase';
 import { RoadTrip } from '../../types/roadTrip.types';
 
 type ScreenShotButtonProps = Omit<React.ComponentProps<typeof Button>, 'onClick'> & {
@@ -8,19 +9,6 @@ type ScreenShotButtonProps = Omit<React.ComponentProps<typeof Button>, 'onClick'
   activeDay?: string;
   targetSelector?: string;
 };
-
-/**
- * Convert a string to a lowercase, dash separated file name
- */
-function toKebabCase(value: string): string {
-  return (
-    value
-      .replace(/([a-z\d])([A-Z])/g, '$1 $2')
-      .match(/[A-Za-z\d]+/g)
-      ?.join('-')
-      .toLowerCase() ?? ''
-  );
-}
 
 function ScreenshotButton({
   data,
