@@ -1,25 +1,14 @@
-import {
-  Cached as CachedIcon,
-  SwapHoriz as SwapHorizIcon,
-  OpenInNew as OpenInNewIcon,
-} from '@mui/icons-material';
-import {
-  AppBar,
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  ThemeProvider,
-  Toolbar,
-  Typography,
-} from '@mui/material';
-import * as React from 'react';
-import { Fragment, useCallback, useState } from 'react';
-import { darkTheme } from '../../theme';
+import { ExternalLink, ArrowLeftRight, RefreshCw } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RouterLink } from '../../config/router';
 import { useSheetStore } from '../../state/sheetState';
 
@@ -27,79 +16,82 @@ type NavigationProps = {
   onMapSizeChange: (size: MapSize) => void;
   onUpdateData: () => void;
   isDataLoading: boolean;
-  sheetId?: string;
 };
 
-export const enum MapSize {
+export enum MapSize {
   Cover = 'cover',
   Fixed = 'fixed',
 }
+
+const mapSizeItems = [
+  { value: MapSize.Fixed, label: 'Fixed size' },
+  { value: MapSize.Cover, label: 'Cover' },
+];
+
+const headerButtonClass = 'text-primary-foreground hover:bg-white/10 hover:text-primary-foreground';
 
 function Navigation({ onMapSizeChange, onUpdateData, isDataLoading }: NavigationProps) {
   const [mapSize, setMapSize] = useState(MapSize.Cover);
   const sheetId = useSheetStore((state) => state.sheetId);
 
   const onSizeChange = useCallback(
-    (event: SelectChangeEvent<MapSize>) => {
-      setMapSize(event.target.value as MapSize);
-      onMapSizeChange(event.target.value as MapSize);
+    (value: MapSize | null) => {
+      if (!value) return;
+      setMapSize(value);
+      onMapSizeChange(value);
     },
-    [setMapSize],
+    [onMapSizeChange],
   );
 
   return (
-    <Fragment>
-      <AppBar position="relative">
-        <ThemeProvider theme={darkTheme}>
-          <Toolbar>
-            <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-              <Typography variant="h5" component="h1">
-                <strong>Road Trip Visualizer</strong>
-              </Typography>
-            </Box>
-            <Button
-              color="inherit"
-              href={`https://docs.google.com/spreadsheets/d/${sheetId}`}
-              target="_blank"
-              startIcon={<OpenInNewIcon />}
-              sx={{ mr: 1 }}
-            >
-              View source
-            </Button>
-            <Button
-              component={Link}
-              color="inherit"
-              to={RouterLink.EnterSheetId}
-              startIcon={<SwapHorizIcon />}
-              sx={{ mr: 1 }}
-            >
-              Change source
-            </Button>
-            <Button
-              color="inherit"
-              onClick={onUpdateData}
-              startIcon={<CachedIcon />}
-              sx={{ mr: 1 }}
-              disabled={isDataLoading}
-            >
-              Update data
-            </Button>
-            <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
-              <InputLabel id="demo-simple-select-label">Map size</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                value={mapSize}
-                label="Map size"
-                onChange={onSizeChange}
-              >
-                <MenuItem value={MapSize.Fixed}>Fixed size</MenuItem>
-                <MenuItem value={MapSize.Cover}>Cover</MenuItem>
-              </Select>
-            </FormControl>
-          </Toolbar>
-        </ThemeProvider>
-      </AppBar>
-    </Fragment>
+    <header className="flex h-16 items-center gap-2 bg-primary px-6 text-primary-foreground">
+      <h1 className="grow text-2xl font-bold">Road Trip Visualizer</h1>
+      <Button
+        variant="ghost"
+        className={headerButtonClass}
+        nativeButton={false}
+        render={
+          <a
+            href={`https://docs.google.com/spreadsheets/d/${sheetId}`}
+            target="_blank"
+            rel="noreferrer"
+          />
+        }
+      >
+        <ExternalLink data-icon="inline-start" />
+        View source
+      </Button>
+      <Button
+        variant="ghost"
+        className={headerButtonClass}
+        nativeButton={false}
+        render={<Link to={RouterLink.EnterSheetId} />}
+      >
+        <ArrowLeftRight data-icon="inline-start" />
+        Change source
+      </Button>
+      <Button
+        variant="ghost"
+        className={headerButtonClass}
+        onClick={onUpdateData}
+        disabled={isDataLoading}
+      >
+        <RefreshCw data-icon="inline-start" />
+        Update data
+      </Button>
+      <Select items={mapSizeItems} value={mapSize} onValueChange={onSizeChange}>
+        <SelectTrigger aria-label="Map size" className="w-48 border-white/30 bg-transparent">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {mapSizeItems.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </header>
   );
 }
 

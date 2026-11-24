@@ -1,15 +1,14 @@
-import { Place as PlaceIcon } from '@mui/icons-material';
-import { Tooltip } from '@mui/material';
-import React from 'react';
-import { StyledListLabel, StyledListStop } from './ListStop.styles';
+import { MapPin } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function ListStop(props: { location: string }) {
   return (
-    <StyledListStop variant="body2" as="span">
-      <PlaceIcon sx={{ mr: 0.5, width: 12, height: 12 }} />
-      <Tooltip title={props.location} placement="bottom" arrow>
-        <StyledListLabel>{props.location}</StyledListLabel>
+    <span className="flex w-full items-center overflow-hidden text-sm whitespace-nowrap">
+      <MapPin className="mr-1 size-3 shrink-0" />
+      <Tooltip>
+        <TooltipTrigger render={<span className="truncate" />}>{props.location}</TooltipTrigger>
+        <TooltipContent side="bottom">{props.location}</TooltipContent>
       </Tooltip>
-    </StyledListStop>
+    </span>
   );
 }

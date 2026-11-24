@@ -1,17 +1,17 @@
-import { Directions as DirectionsIcon } from '@mui/icons-material';
-import { RoadTrip, RoadTripStop } from '../../types/roadTrip.types';
+import { Navigation } from 'lucide-react';
+import React, { MutableRefObject, useCallback, useImperativeHandle, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  Button,
-  Drawer,
   Table,
   TableBody,
   TableCell,
   TableHead,
+  TableHeader,
   TableRow,
-  Typography,
-} from '@mui/material';
-import React, { MutableRefObject, useCallback, useImperativeHandle, useState } from 'react';
-import { StyledTableRow } from './TripOverview.styles';
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { RoadTrip, RoadTripStop } from '../../types/roadTrip.types';
 
 export type TripOverviewHandles = {
   toggleDrawer(): void;
@@ -52,48 +52,53 @@ function TripOverview({ data, activeDay, onDayClick, handlesRef }: TripOverviewP
   );
 
   return (
-    <React.Fragment>
-      <Drawer anchor="left" open={drawer} onClose={() => setDrawer(false)}>
-        <Table sx={{ maxWidth: '80vw' }} stickyHeader>
-          <TableHead>
+    <Sheet open={drawer} onOpenChange={setDrawer}>
+      <SheetContent side="left" className="w-[80vw] max-w-[80vw] overflow-auto sm:max-w-[80vw]">
+        <SheetHeader>
+          <SheetTitle>Trip overview</SheetTitle>
+        </SheetHeader>
+        <Table>
+          <TableHeader>
             <TableRow>
-              {Object.keys(data[0]).map((key) => (
-                <TableCell sx={{ whiteSpace: 'nowrap' }} key={key}>
+              {Object.keys(data[0] ?? {}).map((key) => (
+                <TableHead className="whitespace-nowrap" key={key}>
                   {labels[key as keyof RoadTripStop]}
-                </TableCell>
+                </TableHead>
               ))}
-              <TableCell>View Route</TableCell>
+              <TableHead>View Route</TableHead>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody>
-            {data.map((data) => (
-              <StyledTableRow key={data.dayNumber} selected={activeDay === data.dayNumber}>
-                {Object.entries(data).map(([, value], index) => (
-                  <TableCell key={`${value}.${index}`}>
-                    <Typography variant="body2">{value}</Typography>
+            {data.map((row) => (
+              <TableRow
+                key={row.dayNumber}
+                className={cn(
+                  'odd:bg-muted/50 hover:bg-muted [&:hover>td:first-child]:shadow-[inset_4px_0_0_var(--brand)]',
+                  activeDay === row.dayNumber && 'bg-accent',
+                )}
+              >
+                {Object.entries(row).map(([, value], index) => (
+                  <TableCell key={`${value}.${index}`} className="text-sm">
+                    {value}
                   </TableCell>
                 ))}
                 <TableCell>
-                  {Number(data.distance.replace(' km', '')) > 0 && (
+                  {Number(row.distance.replace(' km', '')) > 0 && (
                     <Button
-                      sx={{ whiteSpace: 'nowrap' }}
-                      onClick={() => {
-                        onDayButtonClick(data.dayNumber);
-                      }}
-                      startIcon={<DirectionsIcon />}
-                      variant="contained"
-                      color="secondary"
+                      className="bg-brand whitespace-nowrap text-brand-foreground hover:bg-brand/80"
+                      onClick={() => onDayButtonClick(row.dayNumber)}
                     >
+                      <Navigation data-icon="inline-start" />
                       View route
                     </Button>
                   )}
                 </TableCell>
-              </StyledTableRow>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
-      </Drawer>
-    </React.Fragment>
+      </SheetContent>
+    </Sheet>
   );
 }
 

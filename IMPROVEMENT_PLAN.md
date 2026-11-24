@@ -25,6 +25,10 @@ Status after the Vite+ migration: `vp check` passes with 0 errors (11 lint warni
 
 ## 3. Dependency modernisation (medium)
 
+> **Done:** React 19, react-router 7, Zustand (replaced Recoil), lodash-es removed, MUI replaced by
+> shadcn/ui (base-nova style, Base UI) with Tailwind v4 and lucide icons. Table below is the original
+> plan, kept for reference.
+
 | Area                | Now               | Target                                  | Notes                                                                                   |
 | ------------------- | ----------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
 | React               | 18                | 19                                      | Check `@react-google-maps/api` and MUI compat first                                     |

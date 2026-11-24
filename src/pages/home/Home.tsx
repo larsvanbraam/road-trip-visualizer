@@ -1,7 +1,7 @@
-import { Clear as ClearIcon } from '@mui/icons-material';
+import { Loader2, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { env } from '../../config/env';
 import Navigation, { MapSize } from '../../components/navigation/Navigation';
-import { CircularProgress, Fab, Grid, Typography } from '@mui/material';
 import Sidebar from '../../components/sidebar/Sidebar';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import Directions from '../../components/direction/Directions';
@@ -12,7 +12,6 @@ import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
 import { useSheetStore } from '../../state/sheetState';
-import { StyledHome, StyledLoaderContainer, StyledMapContainer } from './Home.styles';
 
 const mapSizeConfiguration = {
   [MapSize.Fixed]: {
@@ -26,8 +25,8 @@ const mapSizeConfiguration = {
 };
 
 export function Home() {
-  const map = useRef<google.maps.Map>();
-  const tripOverviewHandles = useRef<TripOverviewHandles>();
+  const map = useRef<google.maps.Map>(undefined);
+  const tripOverviewHandles = useRef<TripOverviewHandles>(undefined);
 
   const sheetId = useSheetStore((state) => state.sheetId);
 
@@ -96,22 +95,14 @@ export function Home() {
   }
 
   return (
-    <StyledHome>
+    <div className="flex min-h-screen flex-col">
       <Navigation
         onMapSizeChange={onMapSizeChange}
         onUpdateData={refreshData}
         isDataLoading={isDataLoading}
       />
-      <Grid container spacing={0} direction="row" sx={{ flexGrow: 1 }}>
-        <Grid
-          item
-          sm={12}
-          md={4}
-          lg={3}
-          xl={2}
-          sx={{ height: '100%', overflow: 'hidden' }}
-          justifyContent="stretch"
-        >
+      <div className="flex grow flex-col md:flex-row">
+        <div className="h-full overflow-hidden md:w-1/3 lg:w-1/4 xl:w-1/6">
           <Sidebar
             data={travelDayData}
             activeDay={activeDay}
@@ -120,8 +111,8 @@ export function Home() {
               tripOverviewHandles.current?.toggleDrawer();
             }}
           />
-        </Grid>
-        <StyledMapContainer item sm={12} md={8} lg={9} xl={10}>
+        </div>
+        <div className="map-grid relative min-h-96 md:w-2/3 lg:w-3/4 xl:w-5/6">
           {!isDataLoading && isMapLoaded ? (
             <GoogleMap
               mapContainerClassName="map-container"
@@ -136,33 +127,27 @@ export function Home() {
               <Directions data={activeDirections} />
             </GoogleMap>
           ) : (
-            <StyledLoaderContainer>
-              <CircularProgress sx={{ mb: 1 }} />
-              <Typography variant="caption">Loading data...</Typography>
-            </StyledLoaderContainer>
+            <div className="flex h-screen flex-col items-center justify-center gap-2">
+              <Loader2 className="size-8 animate-spin" />
+              <span className="text-xs text-muted-foreground">Loading data...</span>
+            </div>
           )}
 
           {activeDay && (
-            <Fab
-              sx={{ position: 'absolute', bottom: 64, right: 16 }}
-              variant="extended"
-              size="medium"
-              color="error"
+            <Button
+              size="lg"
+              className="absolute right-4 bottom-16 rounded-full bg-destructive text-white hover:bg-destructive/80"
               aria-label="Clear selection"
               onClick={() => setActiveDay(undefined)}
             >
-              <ClearIcon sx={{ mr: 1 }} />
+              <X data-icon="inline-start" />
               Clear selection
-            </Fab>
+            </Button>
           )}
 
-          <ScreenshotButton
-            sx={{ position: 'absolute', bottom: 16, right: 16 }}
-            data={roadTripData}
-            activeDay={activeDay}
-          />
-        </StyledMapContainer>
-      </Grid>
+          <ScreenshotButton data={roadTripData} activeDay={activeDay} />
+        </div>
+      </div>
       {!isDataLoading && (
         <TripOverview
           data={roadTripData}
@@ -171,6 +156,6 @@ export function Home() {
           handlesRef={tripOverviewHandles}
         />
       )}
-    </StyledHome>
+    </div>
   );
 }

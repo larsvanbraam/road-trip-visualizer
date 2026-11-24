@@ -1,9 +1,9 @@
-import { ScreenshotMonitor as ScreenshotMonitorIcon } from '@mui/icons-material';
-import { Fab, FabProps } from '@mui/material';
+import { Camera } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import React, { useCallback } from 'react';
 import { RoadTrip } from '../../types/roadTrip.types';
 
-type ScreenShotButtonProps = FabProps & {
+type ScreenShotButtonProps = Omit<React.ComponentProps<typeof Button>, 'onClick'> & {
   data: RoadTrip;
   activeDay?: string;
   targetSelector?: string;
@@ -52,18 +52,16 @@ function ScreenshotButton({
   }, [activeDay, data, targetSelector]);
 
   return (
-    <Fab
+    <Button
       {...restProps}
-      sx={{ position: 'absolute', bottom: 16, right: 16 }}
-      variant="extended"
-      size="medium"
-      color="primary"
+      size="lg"
+      className="absolute right-4 bottom-4 rounded-full"
       aria-label="Take screenshot"
       onClick={onScreenshotClick}
     >
-      <ScreenshotMonitorIcon sx={{ mr: 1 }} />
+      <Camera data-icon="inline-start" />
       Take screenshot
-    </Fab>
+    </Button>
   );
 }
 

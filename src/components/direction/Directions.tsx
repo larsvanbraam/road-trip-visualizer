@@ -14,7 +14,7 @@ type DirectionProps = {
 };
 
 function Directions({ data }: DirectionProps) {
-  const directionsRenderer = useRef<google.maps.DirectionsRenderer>();
+  const directionsRenderer = useRef<google.maps.DirectionsRenderer>(undefined);
   const cachedDirections = useRef(new Map<string, google.maps.DirectionsResult>());
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 

@@ -1,23 +1,13 @@
-import { FileOpen as FileOpenIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { env } from '../../config/env';
-import {
-  Box,
-  Button,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import React, { Fragment, useCallback, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSheetStore } from '../../state/sheetState';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import { EnterSheetIdContainer, EnterSheetIdModal } from './EnterSheetId.styles';
+import { FileText, Trash2 } from 'lucide-react';
+import React, { Fragment, useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { env } from '../../config/env';
+import { useSheetStore } from '../../state/sheetState';
 
 export function EnterSheetId() {
   const navigate = useNavigate();
@@ -28,12 +18,10 @@ export function EnterSheetId() {
   });
 
   const setSheetIds = useSheetStore((state) => state.setSheetIds);
-
   const setSheetId = useSheetStore((state) => state.setSheetId);
-
-  const textField = useRef<HTMLDivElement>(null);
-  const [localSheetId, setLocalSheetId] = useState<string>('');
   const sheetIds = useSheetStore((state) => state.sheetIds);
+
+  const [localSheetId, setLocalSheetId] = useState<string>('');
 
   const getSheetIdIndex = useCallback(
     (id: string) => sheetIds.findIndex((value) => value === id),
@@ -43,7 +31,7 @@ export function EnterSheetId() {
   const onSelectSheetId = useCallback(
     (value: string) => {
       setSheetId(value);
-      navigate('/');
+      void navigate('/');
     },
     [navigate, setSheetId],
   );
@@ -88,7 +76,7 @@ export function EnterSheetId() {
 
       onSelectSheetId(newSheetId);
     },
-    [setSheetIds, onSelectSheetId, sheetIds],
+    [setSheetIds, onSelectSheetId, sheetIds, getSheetIdIndex],
   );
 
   return (
@@ -110,69 +98,62 @@ export function EnterSheetId() {
           }}
         />
       )}
-      <EnterSheetIdContainer component="main">
-        <EnterSheetIdModal>
-          <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
-            Enter the Google Sheet id
-          </Typography>
-          <Box
-            component="form"
+      <main className="absolute inset-0 flex size-full items-center justify-center">
+        <div className="flex min-w-[400px] flex-col items-start rounded-[10px] bg-card p-8 text-card-foreground shadow-lg">
+          <h1 className="mb-4 text-2xl font-medium">Enter the Google Sheet id</h1>
+          <form
             onSubmit={onSubmit}
-            noValidate
-            sx={{ mb: sheetIds.length > 0 ? 4 : 0, width: '100%' }}
+            className={`flex w-full flex-col gap-2 ${sheetIds.length > 0 ? 'mb-8' : ''}`}
           >
-            <TextField
-              ref={textField}
-              margin="normal"
-              required
-              fullWidth
+            <Label htmlFor="sheetId">Google Sheet id *</Label>
+            <Input
               id="sheetId"
-              label="Google Sheet id"
               name="sheetId"
+              required
+              autoFocus
               value={localSheetId}
               onChange={(event) => setLocalSheetId(event.target.value)}
-              autoFocus
-              sx={{ mb: 1 }}
             />
-            <Button type="submit" fullWidth variant="contained" sx={{ mt: 1 }}>
+            <Button type="submit" size="lg" className="mt-2 w-full">
               Continue
             </Button>
-          </Box>
+          </form>
           {sheetIds.length > 0 && (
-            <Box>
-              <Typography component="h1" variant="body1" fontWeight="bold" sx={{ mb: 1 }}>
-                Or choose a previous value
-              </Typography>
-              <List>
+            <div className="w-full">
+              <h2 className="mb-2 font-bold">Or choose a previous value</h2>
+              <ul>
                 {sheetIds.map((value) => (
-                  <ListItem
-                    key={value}
-                    disablePadding
-                    secondaryAction={
-                      <Tooltip title="Remove this id from the history" placement="top">
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => onDeleteSheetId(value)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    }
-                  >
-                    <ListItemButton onClick={() => onSelectSheetId(value)}>
-                      <ListItemIcon>
-                        <FileOpenIcon />
-                      </ListItemIcon>
-                      <ListItemText primary={value} />
-                    </ListItemButton>
-                  </ListItem>
+                  <li key={value} className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      className="grow justify-start"
+                      onClick={() => onSelectSheetId(value)}
+                    >
+                      <FileText data-icon="inline-start" />
+                      {value}
+                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="delete"
+                            onClick={() => onDeleteSheetId(value)}
+                          />
+                        }
+                      >
+                        <Trash2 />
+                      </TooltipTrigger>
+                      <TooltipContent side="top">Remove this id from the history</TooltipContent>
+                    </Tooltip>
+                  </li>
                 ))}
-              </List>
-            </Box>
+              </ul>
+            </div>
           )}
-        </EnterSheetIdModal>
-      </EnterSheetIdContainer>
+        </div>
+      </main>
     </Fragment>
   );
 }

@@ -1,16 +1,12 @@
-import React from 'react';
-import { ThemeProvider } from '@mui/material';
-import './App.css';
-import { theme } from './theme';
-
 import { RouterProvider } from 'react-router-dom';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { router } from './config/router';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <TooltipProvider>
       <RouterProvider router={router} />
-    </ThemeProvider>
+    </TooltipProvider>
   );
 }
 
