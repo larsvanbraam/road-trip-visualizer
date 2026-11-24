@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { parseDistanceKm } from '../../utils/tripStats';
 import { RoadTrip, RoadTripStop } from '../../types/roadTrip.types';
 
 export type TripOverviewHandles = {
@@ -53,7 +54,10 @@ function TripOverview({ data, activeDay, onDayClick, handlesRef }: TripOverviewP
 
   return (
     <Sheet open={drawer} onOpenChange={setDrawer}>
-      <SheetContent side="left" className="w-[80vw] max-w-[80vw] overflow-auto sm:max-w-[80vw]">
+      <SheetContent
+        side="left"
+        className="overflow-auto data-[side=left]:w-[min(80vw,1100px)] data-[side=left]:sm:max-w-[min(80vw,1100px)]"
+      >
         <SheetHeader>
           <SheetTitle>Trip overview</SheetTitle>
         </SheetHeader>
@@ -83,7 +87,7 @@ function TripOverview({ data, activeDay, onDayClick, handlesRef }: TripOverviewP
                   </TableCell>
                 ))}
                 <TableCell>
-                  {Number(row.distance.replace(' km', '')) > 0 && (
+                  {parseDistanceKm(row.distance) > 0 && (
                     <Button
                       className="bg-brand whitespace-nowrap text-brand-foreground hover:bg-brand/80"
                       onClick={() => onDayButtonClick(row.dayNumber)}

@@ -128,10 +128,26 @@
     @apply font-sans;
   }
 }
-/* Brand colours from the previous MUI theme */
+/* Road Trip Visualizer theme: warm paper background, ink primary, orange accent */
 :root {
+  --background: #f6f5f1;
+  --foreground: #000b0d;
+  --card: #ffffff;
+  --card-foreground: #000b0d;
+  --popover: #ffffff;
+  --popover-foreground: #000b0d;
   --primary: #000b0d;
   --primary-foreground: #ffffff;
+  --secondary: #ece9e2;
+  --secondary-foreground: #000b0d;
+  --muted: #efede7;
+  --muted-foreground: #6b6f6c;
+  --accent: #fdece3;
+  --accent-foreground: #7a2e0e;
+  --border: #e3e0d8;
+  --input: #d9d5cb;
+  --ring: #ef6024;
+  --radius: 0.875rem;
   --brand: #ef6024;
   --brand-foreground: #ffffff;
 }
@@ -141,10 +157,21 @@
   --color-brand-foreground: var(--brand-foreground);
 }
 
-/* Blueprint style background shown behind the map while it loads */
+/* Soft blueprint grid shown behind the map while it loads */
 .map-grid {
-  background-color: #eee;
+  background-color: #ebe9e3;
   background-image:
-    linear-gradient(#f5f5f5 1px, transparent 1px), linear-gradient(to right, #f5f5f5 1px, #eee 1px);
-  background-size: 20px 20px;
+    linear-gradient(#f4f2ed 1px, transparent 1px),
+    linear-gradient(to right, #f4f2ed 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Floating surfaces on top of the map */
+.glass {
+  background-color: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 8px 30px rgb(0 0 0 / 0.12);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
 }

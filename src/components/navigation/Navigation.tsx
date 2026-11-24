@@ -1,14 +1,9 @@
-import { ExternalLink, ArrowLeftRight, RefreshCw } from 'lucide-react';
+import { ArrowLeftRight, ExternalLink, Maximize2, RefreshCw, Square } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import { RouterLink } from '../../config/router';
 import { useSheetStore } from '../../state/sheetState';
 
@@ -16,6 +11,7 @@ type NavigationProps = {
   onMapSizeChange: (size: MapSize) => void;
   onUpdateData: () => void;
   isDataLoading: boolean;
+  className?: string;
 };
 
 export enum MapSize {
@@ -23,75 +19,98 @@ export enum MapSize {
   Fixed = 'fixed',
 }
 
-const mapSizeItems = [
-  { value: MapSize.Fixed, label: 'Fixed size' },
-  { value: MapSize.Cover, label: 'Cover' },
+const mapSizes = [
+  { value: MapSize.Cover, label: 'Fill the screen', icon: Maximize2 },
+  { value: MapSize.Fixed, label: 'Fixed 1280 × 720 (for screenshots)', icon: Square },
 ];
 
-const headerButtonClass = 'text-primary-foreground hover:bg-white/10 hover:text-primary-foreground';
+const iconButton = buttonVariants({ variant: 'ghost', size: 'icon' });
 
-function Navigation({ onMapSizeChange, onUpdateData, isDataLoading }: NavigationProps) {
+/**
+ * Floating toolbar with the actions for the current trip
+ */
+function Navigation({ onMapSizeChange, onUpdateData, isDataLoading, className }: NavigationProps) {
   const [mapSize, setMapSize] = useState(MapSize.Cover);
   const sheetId = useSheetStore((state) => state.sheetId);
 
   const onSizeChange = useCallback(
-    (value: MapSize | null) => {
-      if (!value) return;
-      setMapSize(value);
-      onMapSizeChange(value);
+    (size: MapSize) => {
+      setMapSize(size);
+      onMapSizeChange(size);
     },
     [onMapSizeChange],
   );
 
   return (
-    <header className="flex h-16 items-center gap-2 bg-primary px-6 text-primary-foreground">
-      <h1 className="grow text-2xl font-bold">Road Trip Visualizer</h1>
-      <Button
-        variant="ghost"
-        className={headerButtonClass}
-        nativeButton={false}
-        render={
-          <a
-            href={`https://docs.google.com/spreadsheets/d/${sheetId}`}
-            target="_blank"
-            rel="noreferrer"
-          />
-        }
-      >
-        <ExternalLink data-icon="inline-start" />
-        View source
-      </Button>
-      <Button
-        variant="ghost"
-        className={headerButtonClass}
-        nativeButton={false}
-        render={<Link to={RouterLink.EnterSheetId} />}
-      >
-        <ArrowLeftRight data-icon="inline-start" />
-        Change source
-      </Button>
-      <Button
-        variant="ghost"
-        className={headerButtonClass}
-        onClick={onUpdateData}
-        disabled={isDataLoading}
-      >
-        <RefreshCw data-icon="inline-start" />
-        Update data
-      </Button>
-      <Select items={mapSizeItems} value={mapSize} onValueChange={onSizeChange}>
-        <SelectTrigger aria-label="Map size" className="w-48 border-white/30 bg-transparent">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {mapSizeItems.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </header>
+    <nav
+      aria-label="Trip actions"
+      className={cn('glass flex items-center gap-1 rounded-full p-1', className)}
+    >
+      <Tooltip>
+        <TooltipTrigger
+          aria-label="View source sheet"
+          className={iconButton}
+          render={
+            <a
+              href={`https://docs.google.com/spreadsheets/d/${sheetId}`}
+              target="_blank"
+              rel="noreferrer"
+            />
+          }
+        >
+          <ExternalLink />
+        </TooltipTrigger>
+        <TooltipContent side="bottom">View the Google Sheet</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger
+          aria-label="Change source sheet"
+          className={iconButton}
+          render={<Link to={RouterLink.EnterSheetId} />}
+        >
+          <ArrowLeftRight />
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Use a different sheet</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger
+          aria-label="Update data"
+          disabled={isDataLoading}
+          className={iconButton}
+          onClick={onUpdateData}
+        >
+          <RefreshCw className={cn(isDataLoading && 'animate-spin')} />
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Reload the sheet</TooltipContent>
+      </Tooltip>
+
+      <div role="group" aria-label="Map size" className="ml-1 flex rounded-full bg-muted p-0.5">
+        {mapSizes.map(({ value, label, icon: Icon }) => (
+          <Tooltip key={value}>
+            <TooltipTrigger
+              aria-label={label}
+              aria-pressed={mapSize === value}
+              onClick={() => onSizeChange(value)}
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className={cn(
+                    'rounded-full',
+                    mapSize === value && 'bg-card text-foreground shadow-sm hover:bg-card',
+                  )}
+                />
+              }
+            >
+              <Icon />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{label}</TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
+    </nav>
   );
 }
 

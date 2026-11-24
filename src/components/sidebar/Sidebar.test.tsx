@@ -59,6 +59,22 @@ describe('Sidebar', () => {
     expect(screen.getByRole('button', { name: /Day 3/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
+  it('summarises the trip', () => {
+    setup();
+
+    expect(screen.getByText('Travel days').previousSibling).toHaveTextContent('2');
+    expect(screen.getByText('Distance').previousSibling).toHaveTextContent('200 km');
+    expect(screen.getByText('Driving').previousSibling).toHaveTextContent('2 h');
+  });
+
+  it('shows the distance and duration of each day', () => {
+    setup({ data: [stop('1', 'Amsterdam', 'Brussels')] });
+
+    const day = screen.getByRole('button', { name: /Day 1/ });
+    expect(day).toHaveTextContent('100 km');
+    expect(day).toHaveTextContent('1 h');
+  });
+
   it('opens the full overview', async () => {
     const { onFullOverviewClick } = setup();
 
@@ -71,6 +87,6 @@ describe('Sidebar', () => {
     setup({ data: [] });
 
     expect(screen.queryByText(/Day \d/)).not.toBeInTheDocument();
-    expect(document.querySelectorAll('[data-slot=skeleton]')).toHaveLength(5);
+    expect(document.querySelectorAll('[data-slot=skeleton]')).toHaveLength(4);
   });
 });

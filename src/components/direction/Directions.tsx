@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DirectionsRenderer, DirectionsService } from '@react-google-maps/api';
+import { DirectionsRenderer, DirectionsService, useGoogleMap } from '@react-google-maps/api';
 import { describeDirectionsStatus, UserFacingError } from '../../utils/errors';
 
 type Direction = {
@@ -16,7 +16,19 @@ type DirectionProps = {
   onError?: (error?: UserFacingError) => void;
 };
 
+/**
+ * Room to keep free around the route so it is not hidden behind the floating panel and toolbar
+ */
+function getViewportPadding(): google.maps.Padding {
+  const isDesktop = window.innerWidth >= 768;
+
+  return isDesktop
+    ? { top: 80, right: 80, bottom: 80, left: 420 }
+    : { top: 80, right: 40, bottom: window.innerHeight * 0.45 + 40, left: 40 };
+}
+
 function Directions({ data, onError }: DirectionProps) {
+  const map = useGoogleMap();
   const directionsRenderer = useRef<google.maps.DirectionsRenderer>(undefined);
   const cachedDirections = useRef(new Map<string, google.maps.DirectionsResult>());
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -69,8 +81,21 @@ function Directions({ data, onError }: DirectionProps) {
     setDirections(cachedDirections.current.get(id) ?? null);
   }, [data, id]);
 
+  useEffect(() => {
+    const bounds = directions?.routes[0]?.bounds;
+
+    if (map && bounds) {
+      map.fitBounds(bounds, getViewportPadding());
+    }
+  }, [directions, map]);
+
   if (directions) {
-    return <DirectionsRenderer options={{ directions }} onLoad={onDirectionsRendererCallback} />;
+    return (
+      <DirectionsRenderer
+        options={{ directions, preserveViewport: true }}
+        onLoad={onDirectionsRendererCallback}
+      />
+    );
   }
 
   return (

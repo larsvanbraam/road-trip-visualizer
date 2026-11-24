@@ -13,7 +13,14 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
+import { parseDistanceKm } from '../../utils/tripStats';
 import { useSheetStore } from '../../state/sheetState';
+
+// Hide points of interest and transit stops so the route stands out
+const mapStyles: Array<google.maps.MapTypeStyle> = [
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+];
 
 const mapSizeConfiguration = {
   [MapSize.Fixed]: {
@@ -62,7 +69,7 @@ export function Home() {
   const [routeError, setRouteError] = useState<UserFacingError>();
 
   const travelDayData = useMemo(
-    () => roadTripData.filter((day) => Number(day.distance.replace(' km', '')) > 0),
+    () => roadTripData.filter((day) => parseDistanceKm(day.distance) > 0),
     [roadTripData],
   );
 
@@ -119,77 +126,80 @@ export function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative h-screen w-full overflow-hidden bg-muted">
+      <div className="map-grid absolute inset-0 flex items-center justify-center">
+        {mapLoadError ? (
+          <div className="p-8">
+            <ErrorAlert
+              className="max-w-md"
+              error={{
+                title: 'Google Maps failed to load',
+                message:
+                  'Check your internet connection, and that the API key allows the Maps JavaScript API on this domain.',
+              }}
+            />
+          </div>
+        ) : !isDataLoading && isMapLoaded ? (
+          <GoogleMap
+            mapContainerClassName="map-container"
+            mapContainerStyle={{
+              width: '100%',
+              height: '100%',
+            }}
+            options={{ disableDefaultUI: true, styles: mapStyles }}
+            zoom={8}
+            onLoad={onMapLoaded}
+          >
+            <Directions data={activeDirections} onError={setRouteError} />
+          </GoogleMap>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="size-8 animate-spin text-brand" />
+            <span className="text-sm text-muted-foreground">Loading your trip...</span>
+          </div>
+        )}
+      </div>
+
+      <aside className="glass absolute inset-x-3 bottom-8 z-10 max-h-[45vh] overflow-hidden rounded-2xl md:inset-y-3 md:right-auto md:bottom-10 md:max-h-none md:w-[380px]">
+        <Sidebar
+          data={travelDayData}
+          activeDay={activeDay}
+          onDayClick={onShowRouteClick}
+          onFullOverviewClick={() => {
+            tripOverviewHandles.current?.toggleDrawer();
+          }}
+        />
+      </aside>
+
       <Navigation
+        className="absolute top-3 right-3 z-10"
         onMapSizeChange={onMapSizeChange}
         onUpdateData={refreshData}
         isDataLoading={isDataLoading}
       />
-      <div className="flex grow flex-col md:flex-row">
-        <div className="h-full overflow-hidden md:w-1/3 lg:w-1/4 xl:w-1/6">
-          <Sidebar
-            data={travelDayData}
-            activeDay={activeDay}
-            onDayClick={onShowRouteClick}
-            onFullOverviewClick={() => {
-              tripOverviewHandles.current?.toggleDrawer();
+
+      {routeError && (
+        <ErrorAlert className="absolute top-16 right-3 z-10 max-w-md" error={routeError} />
+      )}
+
+      <div className="absolute right-4 bottom-8 z-10 flex flex-col items-end gap-2">
+        {activeDay && (
+          <Button
+            size="lg"
+            className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
+            aria-label="Clear selection"
+            onClick={() => {
+              setActiveDay(undefined);
+              setRouteError(undefined);
             }}
-          />
-        </div>
-        <div className="map-grid relative min-h-96 md:w-2/3 lg:w-3/4 xl:w-5/6">
-          {mapLoadError ? (
-            <div className="flex h-screen items-center justify-center p-8">
-              <ErrorAlert
-                className="max-w-md"
-                error={{
-                  title: 'Google Maps failed to load',
-                  message:
-                    'Check your internet connection, and that the API key allows the Maps JavaScript API on this domain.',
-                }}
-              />
-            </div>
-          ) : !isDataLoading && isMapLoaded ? (
-            <GoogleMap
-              mapContainerClassName="map-container"
-              mapContainerStyle={{
-                width: '100%',
-                height: '100%',
-              }}
-              options={{ disableDefaultUI: true }}
-              zoom={8}
-              onLoad={onMapLoaded}
-            >
-              <Directions data={activeDirections} onError={setRouteError} />
-            </GoogleMap>
-          ) : (
-            <div className="flex h-screen flex-col items-center justify-center gap-2">
-              <Loader2 className="size-8 animate-spin" />
-              <span className="text-xs text-muted-foreground">Loading data...</span>
-            </div>
-          )}
-
-          {routeError && (
-            <ErrorAlert className="absolute top-4 left-4 z-10 max-w-md" error={routeError} />
-          )}
-
-          {activeDay && (
-            <Button
-              size="lg"
-              className="absolute right-4 bottom-16 rounded-full bg-destructive text-white hover:bg-destructive/80"
-              aria-label="Clear selection"
-              onClick={() => {
-                setActiveDay(undefined);
-                setRouteError(undefined);
-              }}
-            >
-              <X data-icon="inline-start" />
-              Clear selection
-            </Button>
-          )}
-
-          <ScreenshotButton data={roadTripData} activeDay={activeDay} />
-        </div>
+          >
+            <X data-icon="inline-start" />
+            Show whole trip
+          </Button>
+        )}
+        <ScreenshotButton data={roadTripData} activeDay={activeDay} />
       </div>
+
       {!isDataLoading && (
         <TripOverview
           data={roadTripData}

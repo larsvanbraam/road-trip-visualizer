@@ -43,7 +43,7 @@ function ScreenshotButton({
     <Button
       {...restProps}
       size="lg"
-      className="absolute right-4 bottom-4 rounded-full"
+      className="rounded-full shadow-lg"
       aria-label="Take screenshot"
       onClick={onScreenshotClick}
     >
