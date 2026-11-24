@@ -68,7 +68,7 @@ function TripOverview({ data, activeDay, onDayClick, handlesRef }: TripOverviewP
           <TableBody>
             {data.map((data) => (
               <StyledTableRow key={data.dayNumber} selected={activeDay === data.dayNumber}>
-                {Object.entries(data).map(([key, value = '-'], index) => (
+                {Object.entries(data).map(([, value], index) => (
                   <TableCell key={`${value}.${index}`}>
                     <Typography variant="body2">{value}</Typography>
                   </TableCell>

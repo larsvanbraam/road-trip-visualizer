@@ -23,8 +23,8 @@ import { useRecoilValue } from 'recoil';
 import { activeSheetIdState } from '../../state/sheetState';
 
 type NavigationProps = {
-  onMapSizeChange(size: MapSize): void;
-  onUpdateData(): void;
+  onMapSizeChange: (size: MapSize) => void;
+  onUpdateData: () => void;
   isDataLoading: boolean;
   sheetId?: string;
 };

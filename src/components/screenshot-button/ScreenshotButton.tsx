@@ -12,7 +12,7 @@ type ScreenShotButtonProps = FabProps & {
 };
 
 function ScreenshotButton({
-  data = [],
+  data,
   activeDay,
   targetSelector = '.map-container',
   ...restProps
@@ -24,7 +24,7 @@ function ScreenshotButton({
     if (!targetElement)
       throw new Error('Target element cannot be found, unable to take screenshot');
 
-    html2canvas(targetElement, {
+    void html2canvas(targetElement, {
       useCORS: true,
     }).then((canvas) => {
       const anchor = document.createElement('a');
@@ -38,7 +38,7 @@ function ScreenshotButton({
       anchor.href = canvas.toDataURL();
       anchor.click();
     });
-  }, [activeDay]);
+  }, [activeDay, data, targetSelector]);
 
   return (
     <Fab

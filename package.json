@@ -32,5 +32,6 @@
     "use-google-sheets": "^2.0.0",
     "vite": "catalog:",
     "vite-plus": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@12.23.0"
 }

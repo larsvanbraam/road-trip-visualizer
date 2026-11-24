@@ -29,3 +29,6 @@ token.json
 /src/asset/data.json
 
 credentials.json
+
+# IDE
+.idea

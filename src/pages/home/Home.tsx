@@ -1,5 +1,6 @@
+import { env } from '../../config/env';
 import Navigation, { MapSize } from '../../components/navigation/Navigation';
-import { Box, CircularProgress, Fab, Grid, Typography } from '@mui/material';
+import { CircularProgress, Fab, Grid, Typography } from '@mui/material';
 import Sidebar from '../../components/sidebar/Sidebar';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import Directions from '../../components/direction/Directions';
@@ -37,19 +38,19 @@ export function Home() {
     error,
     refetch: refreshData,
   } = useGoogleSheets({
-    apiKey: import.meta.env.VITE_GOOGLE_API_KEY ?? '',
+    apiKey: env.googleApiKey,
     sheetId,
   });
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_API_KEY ?? '',
+    googleMapsApiKey: env.googleApiKey,
   });
 
   const roadTripData = useMemo(
     () =>
       parseGoogleSheetData(
-        rawSheetData.find(({ id }) => id === import.meta.env.VITE_TAB_NAME) ?? {
+        rawSheetData.find(({ id }) => id === env.tabName) ?? {
           data: [],
           id: '',
         },

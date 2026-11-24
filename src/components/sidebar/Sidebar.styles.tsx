@@ -1,4 +1,4 @@
-import { alpha, Box, List, ListItem, styled, Typography } from '@mui/material';
+import { alpha, Box, List, ListItem, styled } from '@mui/material';
 
 export const StyledSidebar = styled(Box)`
   height: calc(100vh - 64px);

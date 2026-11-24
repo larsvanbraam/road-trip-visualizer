@@ -66,36 +66,23 @@ Simply enable Google Sheets Api for your API key.
 
 The next step is to create a .env file with the newly fetched credentials.
 
-```javascript
-VITE_GOOGLE_API_KEY = [ADD_GOOGLE_MAPS_KEY_HERE];
-VITE_TAB_NAME = Stops;
+```
+VITE_GOOGLE_API_KEY=[ADD_GOOGLE_API_KEY_HERE]
+VITE_TAB_NAME=Stops
 ```
 
-## Available Scripts
+## Development
 
-In the project directory, you can run:
+This project uses [Vite+](https://viteplus.dev) and pnpm. Copy `.env.example` to `.env` and fill in
+your Google API key first.
 
-### `npm start`
+| Command      | What it does                                     |
+| ------------ | ------------------------------------------------ |
+| `vp install` | Install dependencies                             |
+| `vp dev`     | Start the dev server on http://localhost:3000    |
+| `vp check`   | Format, lint and type-check (runs on pre-commit) |
+| `vp build`   | Production build to `dist/`                      |
+| `vp preview` | Preview the production build                     |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests)
-for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for
-more information.
+**Tip:** restrict your Google API key to your site's HTTP referrers and to the Maps JavaScript and
+Sheets APIs. The key ends up in the client bundle, so that restriction is its only protection.

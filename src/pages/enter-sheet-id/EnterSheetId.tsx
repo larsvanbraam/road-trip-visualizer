@@ -1,3 +1,4 @@
+import { env } from '../../config/env';
 import {
   Box,
   Button,
@@ -25,7 +26,7 @@ export function EnterSheetId() {
 
   const { isLoaded: isMapLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_API_KEY ?? '',
+    googleMapsApiKey: env.googleApiKey,
   });
 
   const setSheetIds = useSetRecoilState(sheetIdsState);

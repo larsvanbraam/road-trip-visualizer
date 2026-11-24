@@ -23,8 +23,8 @@ import { ListStop } from './components/ListStop';
 type SidebarProps = {
   data: RoadTrip;
   activeDay?: string;
-  onDayClick(dayNumber: string): void;
-  onFullOverviewClick(): void;
+  onDayClick: (dayNumber: string) => void;
+  onFullOverviewClick: () => void;
 };
 
 function Sidebar({ data, activeDay, onDayClick, onFullOverviewClick }: SidebarProps) {
