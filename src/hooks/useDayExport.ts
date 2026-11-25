@@ -3,6 +3,7 @@ import { RoadTrip } from '../types/roadTrip.types';
 import {
   buildExportTargets,
   canvasToPngBytes,
+  estimateSecondsLeft,
   createZip,
   downloadBlob,
   ExportFile,
@@ -16,6 +17,8 @@ export type ExportProgress = {
   current: number;
   total: number;
   label: string;
+  /** A rough estimate of the seconds left, once there is enough to base it on */
+  secondsLeft?: number;
 };
 
 type UseDayExportOptions = {
@@ -119,13 +122,26 @@ export function useDayExport({
       google.maps.event.trigger(map, 'resize');
       await sleep(SETTLE_DELAY_MS);
 
+      // Timing starts after the first screenshot, which is slower than the rest
+      let timingStartedAt = 0;
+
       for (const [index, target] of targets.entries()) {
         if (isCancelled.current) break;
+
+        if (index === 1) timingStartedAt = performance.now();
 
         setProgress({
           current: index + 1,
           total: targets.length,
           label: target.label,
+          secondsLeft:
+            index > 1
+              ? estimateSecondsLeft({
+                  timedSteps: index - 1,
+                  elapsedMs: performance.now() - timingStartedAt,
+                  remaining: targets.length - index,
+                })
+              : undefined,
         });
 
         showDay(target.dayNumber);

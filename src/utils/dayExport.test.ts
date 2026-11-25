@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RoadTrip } from '../types/roadTrip.types';
-import { buildExportTargets, createZip, readZip } from './dayExport';
+import { buildExportTargets, createZip, estimateSecondsLeft, readZip } from './dayExport';
 
 const day = (dayNumber: string, from: string, to: string): RoadTrip[number] => ({
   dayNumber,
@@ -72,5 +72,22 @@ describe('createZip', () => {
     expect(Object.keys(files)).toEqual(['00-full-trip.png', '01-day-1.png']);
     expect(Array.from(files['00-full-trip.png'])).toEqual([1, 2, 3]);
     expect(Array.from(files['01-day-1.png'])).toEqual([4, 5]);
+  });
+});
+
+describe('estimateSecondsLeft', () => {
+  it('gives no estimate until enough screenshots are timed', () => {
+    expect(estimateSecondsLeft({ timedSteps: 1, elapsedMs: 3000, remaining: 10 })).toBeUndefined();
+  });
+
+  it('multiplies the average time by the screenshots left, rounded to 5 seconds', () => {
+    // 3 s per screenshot, 10 to go
+    expect(estimateSecondsLeft({ timedSteps: 2, elapsedMs: 6000, remaining: 10 })).toBe(30);
+    expect(estimateSecondsLeft({ timedSteps: 2, elapsedMs: 6200, remaining: 11 })).toBe(35);
+  });
+
+  it('never shows less than 5 seconds, and nothing when nothing is left', () => {
+    expect(estimateSecondsLeft({ timedSteps: 3, elapsedMs: 3000, remaining: 1 })).toBe(5);
+    expect(estimateSecondsLeft({ timedSteps: 3, elapsedMs: 3000, remaining: 0 })).toBeUndefined();
   });
 });

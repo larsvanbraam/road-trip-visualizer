@@ -19,6 +19,31 @@ export type ExportFile = {
 };
 
 const MAX_NAME_LENGTH = 80;
+/** The first screenshots are slower (loading the library, resizing the map), so they are not counted */
+const MIN_TIMED_STEPS = 2;
+const ETA_ROUNDING_S = 5;
+
+/**
+ * A rough estimate of the seconds left, from how long the screenshots after the first one took.
+ * Nothing is returned until there are enough of them, because an early guess would be far off.
+ */
+export function estimateSecondsLeft({
+  timedSteps,
+  elapsedMs,
+  remaining,
+}: {
+  /** Screenshots finished since the timing started */
+  timedSteps: number;
+  elapsedMs: number;
+  /** Screenshots still to take, including the one in progress */
+  remaining: number;
+}): number | undefined {
+  if (timedSteps < MIN_TIMED_STEPS || remaining <= 0) return undefined;
+
+  const seconds = ((elapsedMs / timedSteps) * remaining) / 1000;
+
+  return Math.max(ETA_ROUNDING_S, Math.round(seconds / ETA_ROUNDING_S) * ETA_ROUNDING_S);
+}
 
 function describeDay({ dayNumber, morningLocation, eveningLocation }: RoadTripStop): string {
   return toKebabCase(`day ${dayNumber} ${morningLocation} ${eveningLocation}`).slice(
