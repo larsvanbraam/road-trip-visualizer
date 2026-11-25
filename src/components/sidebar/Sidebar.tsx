@@ -13,6 +13,8 @@ import {
 import { ListStop } from './components/ListStop';
 
 type SidebarProps = {
+  /** The name of the trip, when it is known */
+  title?: string;
   data: RoadTrip;
   activeDay?: string;
   onDayClick: (dayNumber: string) => void;
@@ -32,13 +34,24 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Sidebar({ data, activeDay, onDayClick, onFullOverviewClick }: SidebarProps) {
+function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: SidebarProps) {
   const stats = getTripStats(data);
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-col gap-4 p-4 pb-3">
         <Logo />
+        {title && (
+          <div className="flex flex-col gap-1.5 border-l-[3px] border-brand pl-3">
+            <span className="flex items-center gap-1.5 text-[11px] leading-none font-semibold tracking-[0.14em] text-brand uppercase">
+              <Route className="size-3" aria-hidden />
+              Your road trip
+            </span>
+            <h1 className="text-2xl leading-[1.1] font-bold tracking-tight text-balance break-words">
+              {title}
+            </h1>
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-2">
           <Stat label="Travel days" value={String(stats.days)} />
           <Stat label="Distance" value={`${numberFormat.format(stats.distanceKm)} km`} />

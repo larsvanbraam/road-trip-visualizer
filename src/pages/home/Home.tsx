@@ -20,6 +20,7 @@ import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
 import { parseDistanceKm } from '../../utils/tripStats';
 import { useSheetStore } from '../../state/sheetState';
+import { useSheetTitle } from '../../hooks/useSheetTitle';
 import { trackEvent } from '../../utils/analytics';
 
 // Hide points of interest and transit stops so the route stands out
@@ -53,6 +54,8 @@ export function Home() {
   const tripOverviewHandles = useRef<TripOverviewHandles>(undefined);
 
   const sheetId = useSheetStore((state) => state.sheetId);
+
+  const tripTitle = useSheetTitle(sheetId);
 
   const {
     data: rawSheetData,
@@ -204,6 +207,15 @@ export function Home() {
     }
   }, [isDataLoading, roadTripData.length]);
 
+  // The tab shows which trip is open, which helps when several are open at once
+  useEffect(() => {
+    document.title = tripTitle ? `${tripTitle} · Road Trip Visualizer` : 'Road Trip Visualizer';
+
+    return () => {
+      document.title = 'Road Trip Visualizer';
+    };
+  }, [tripTitle]);
+
   if (!sheetId) {
     return <Navigate to="/enter-sheet-id" replace />;
   }
@@ -272,6 +284,7 @@ export function Home() {
 
       <aside className="glass absolute inset-x-3 bottom-8 z-10 max-h-[45vh] overflow-hidden rounded-2xl md:inset-y-3 md:right-auto md:bottom-10 md:max-h-none md:w-[380px]">
         <Sidebar
+          title={tripTitle}
           data={travelDayData}
           activeDay={activeDay}
           onDayClick={onShowRouteClick}
