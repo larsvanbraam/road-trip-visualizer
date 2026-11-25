@@ -7,13 +7,14 @@ type ExportOverlayProps = {
 };
 
 /**
- * Blocks the page while the screenshots are taken, because the map is changing underneath
+ * Blocks the page while the screenshots are taken, because the map is changing underneath. It is
+ * not dimmed, so the map can be watched while it is photographed.
  */
 export function ExportOverlay({ progress, onCancel }: ExportOverlayProps) {
   const percentage = Math.round((Math.max(progress.current - 1, 0) / progress.total) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/10 p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-6">
       <div
         role="alertdialog"
         aria-live="polite"

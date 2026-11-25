@@ -337,104 +337,108 @@ export function Home() {
         )}
       </div>
 
-      <aside className="glass absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 max-h-[60dvh] overflow-hidden rounded-2xl md:inset-y-8 md:right-auto md:max-h-none md:w-[380px]">
-        <Sidebar
-          title={tripTitle}
-          data={listDayData}
-          activeDay={activeDay}
-          onDayClick={onShowRouteClick}
-          onFullOverviewClick={() => {
-            trackEvent('overview_toggled');
-            tripOverviewHandles.current?.toggleDrawer();
-          }}
+      {/* Only the map and the progress are left while the screenshots are taken. The rest stays
+          mounted, so nothing is lost, it is just not shown. */}
+      <div className={dayExport.isExporting ? 'hidden' : 'contents'}>
+        <aside className="glass absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 max-h-[60dvh] overflow-hidden rounded-2xl md:inset-y-8 md:right-auto md:max-h-none md:w-[380px]">
+          <Sidebar
+            title={tripTitle}
+            data={listDayData}
+            activeDay={activeDay}
+            onDayClick={onShowRouteClick}
+            onFullOverviewClick={() => {
+              trackEvent('overview_toggled');
+              tripOverviewHandles.current?.toggleDrawer();
+            }}
+          />
+        </aside>
+
+        <Navigation
+          className="absolute top-3 right-3 z-10"
+          onMapSizeChange={onMapSizeChange}
+          onUpdateData={refreshData}
+          isDataLoading={isDataLoading}
         />
-      </aside>
 
-      <Navigation
-        className="absolute top-3 right-3 z-10"
-        onMapSizeChange={onMapSizeChange}
-        onUpdateData={refreshData}
-        isDataLoading={isDataLoading}
-      />
+        {(dayExport.notice ?? routeError) && (
+          <ErrorAlert
+            className="absolute top-16 right-3 left-3 z-10 md:left-auto md:max-w-md"
+            error={(dayExport.notice ?? routeError)!}
+            onRetry={dayExport.notice ? undefined : retryRoute}
+          />
+        )}
 
-      {(dayExport.notice ?? routeError) && (
-        <ErrorAlert
-          className="absolute top-16 right-3 left-3 z-10 md:left-auto md:max-w-md"
-          error={(dayExport.notice ?? routeError)!}
-          onRetry={dayExport.notice ? undefined : retryRoute}
-        />
-      )}
-
-      <div className="absolute top-16 right-3 z-10 flex flex-col items-end gap-2 md:top-auto md:right-4 md:bottom-8">
-        {activeDay && (
+        <div className="absolute top-16 right-3 z-10 flex flex-col items-end gap-2 md:top-auto md:right-4 md:bottom-8">
+          {activeDay && (
+            <Button
+              size="lg"
+              className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:h-11 max-md:px-4"
+              aria-label="Clear selection"
+              onClick={() => {
+                trackEvent('whole_trip_shown');
+                setActiveDay(undefined);
+                setRouteError(undefined);
+              }}
+            >
+              <X data-icon="inline-start" />
+              Show whole trip
+            </Button>
+          )}
           <Button
             size="lg"
-            className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:h-11 max-md:px-4"
-            aria-label="Clear selection"
-            onClick={() => {
-              trackEvent('whole_trip_shown');
-              setActiveDay(undefined);
-              setRouteError(undefined);
-            }}
+            className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0 max-md:has-data-[icon=inline-start]:pl-0"
+            aria-label={isReplayOpen ? 'Close replay' : 'Replay trip'}
+            aria-pressed={isReplayOpen}
+            disabled={
+              isDataLoading ||
+              travelDayData.length === 0 ||
+              activeDirections.length === 0 ||
+              dayExport.isExporting
+            }
+            onClick={() => setIsReplayOpen((open) => !open)}
           >
-            <X data-icon="inline-start" />
-            Show whole trip
+            <Car data-icon="inline-start" />
+            <span className="max-md:sr-only">{isReplayOpen ? 'Close replay' : 'Replay trip'}</span>
           </Button>
+          <ExportAllButton
+            onClick={() => void dayExport.start()}
+            disabled={dayExport.isExporting || isDataLoading || travelDayData.length === 0}
+          />
+          <ScreenshotButton data={roadTripData} activeDay={activeDay} />
+        </div>
+
+        {!isDataLoading && (
+          <DayLoadChart
+            data={roadTripData}
+            activeDay={activeDay}
+            replayDay={replayDay}
+            onDayClick={onShowRouteClick}
+            className="absolute z-10 hidden lg:bottom-8 lg:left-[404px] lg:block lg:w-[min(640px,calc(100vw-404px-240px))]"
+          />
         )}
-        <Button
-          size="lg"
-          className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0 max-md:has-data-[icon=inline-start]:pl-0"
-          aria-label={isReplayOpen ? 'Close replay' : 'Replay trip'}
-          aria-pressed={isReplayOpen}
-          disabled={
-            isDataLoading ||
-            travelDayData.length === 0 ||
-            activeDirections.length === 0 ||
-            dayExport.isExporting
-          }
-          onClick={() => setIsReplayOpen((open) => !open)}
-        >
-          <Car data-icon="inline-start" />
-          <span className="max-md:sr-only">{isReplayOpen ? 'Close replay' : 'Replay trip'}</span>
-        </Button>
-        <ExportAllButton
-          onClick={() => void dayExport.start()}
-          disabled={dayExport.isExporting || isDataLoading || travelDayData.length === 0}
-        />
-        <ScreenshotButton data={roadTripData} activeDay={activeDay} />
+
+        {isReplayOpen && !isDataLoading && activeDirections.length > 0 && (
+          <TripReplay
+            days={activeDirections}
+            directions={routeDirections}
+            getMap={getMap}
+            onDayChange={setReplayDay}
+            onClose={() => setIsReplayOpen(false)}
+          />
+        )}
+
+        {!isDataLoading && (
+          <TripOverview
+            data={roadTripData}
+            activeDay={activeDay}
+            onDayClick={onShowRouteClick}
+            handlesRef={tripOverviewHandles}
+          />
+        )}
       </div>
-
-      {!isDataLoading && (
-        <DayLoadChart
-          data={roadTripData}
-          activeDay={activeDay}
-          replayDay={replayDay}
-          onDayClick={onShowRouteClick}
-          className="absolute z-10 hidden lg:bottom-8 lg:left-[404px] lg:block lg:w-[min(640px,calc(100vw-404px-240px))]"
-        />
-      )}
-
-      {isReplayOpen && !isDataLoading && activeDirections.length > 0 && (
-        <TripReplay
-          days={activeDirections}
-          directions={routeDirections}
-          getMap={getMap}
-          onDayChange={setReplayDay}
-          onClose={() => setIsReplayOpen(false)}
-        />
-      )}
 
       {dayExport.progress && (
         <ExportOverlay progress={dayExport.progress} onCancel={dayExport.cancel} />
-      )}
-
-      {!isDataLoading && (
-        <TripOverview
-          data={roadTripData}
-          activeDay={activeDay}
-          onDayClick={onShowRouteClick}
-          handlesRef={tripOverviewHandles}
-        />
       )}
     </div>
   );
