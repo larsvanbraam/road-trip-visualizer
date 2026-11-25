@@ -7,6 +7,8 @@ import {
   parseDistanceKm,
   parseDurationMinutes,
   parseViaStops,
+  isSheetError,
+  toSheetDuration,
 } from './tripStats';
 
 describe('parseDistanceKm', () => {
@@ -91,5 +93,23 @@ describe('parseViaStops', () => {
 
   it('returns nothing for an empty value', () => {
     expect(parseViaStops('')).toEqual([]);
+  });
+});
+
+describe('isSheetError', () => {
+  it('recognises the errors a sheet formula leaves in a cell', () => {
+    expect(isSheetError('#ERROR!')).toBe(true);
+    expect(isSheetError('#N/A')).toBe(true);
+    expect(isSheetError('218 km')).toBe(false);
+    expect(isSheetError('')).toBe(false);
+    expect(isSheetError(undefined)).toBe(false);
+  });
+});
+
+describe('toSheetDuration', () => {
+  it('writes minutes like the sheet and can be read back', () => {
+    expect(toSheetDuration(392.9667)).toBe('6:32:58');
+    expect(toSheetDuration(45)).toBe('0:45:00');
+    expect(parseDurationMinutes(toSheetDuration(150))).toBe(150);
   });
 });

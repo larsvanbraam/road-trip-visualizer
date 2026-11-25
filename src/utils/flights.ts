@@ -1,10 +1,34 @@
 import type { RoadTripStop } from '../types/roadTrip.types';
-import { parseDistanceKm, parseDurationMinutes } from './tripStats';
+import { isSheetError, parseDistanceKm, parseDurationMinutes } from './tripStats';
 
 type FlightCandidate = Pick<RoadTripStop, 'morningLocation' | 'eveningLocation'> &
   Partial<Pick<RoadTripStop, 'distance' | 'time'>>;
 
 const normalize = (value?: string) => (value ?? '').trim().toLowerCase();
+
+/**
+ * The sheet could not calculate the distance of a day that goes from one place to another, for
+ * example because a quota of its formulas was reached. Such a day can be a flight or a drive, so
+ * it has to be looked up, see probeDay.
+ */
+export function needsRouteLookup({
+  morningLocation,
+  eveningLocation,
+  distance,
+  time,
+}: FlightCandidate): boolean {
+  const from = normalize(morningLocation);
+  const to = normalize(eveningLocation);
+
+  return (
+    from !== '' &&
+    to !== '' &&
+    from !== to &&
+    (isSheetError(distance) || isSheetError(time)) &&
+    parseDistanceKm(distance ?? '') === 0 &&
+    parseDurationMinutes(time ?? '') === 0
+  );
+}
 
 /**
  * A flying day starts and ends in different places without any driving in between. The sheet has
@@ -18,6 +42,9 @@ export function isFlightDay({
 }: FlightCandidate): boolean {
   const from = normalize(morningLocation);
   const to = normalize(eveningLocation);
+
+  // An error says nothing about the day, it is not "0 km"
+  if (isSheetError(distance) || isSheetError(time)) return false;
 
   return (
     from !== '' &&

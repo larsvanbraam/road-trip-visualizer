@@ -19,7 +19,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
-import { parseDistanceKm } from '../../utils/tripStats';
+import { parseDistanceKm, toSheetDuration } from '../../utils/tripStats';
+import { getDayKey } from '../../utils/routeId';
+import { useDayProbes } from '../../hooks/useDayProbes';
 import { isFlightDay } from '../../utils/flights';
 import { useSheetStore } from '../../state/sheetState';
 import { useMapsApiError } from '../../hooks/useMapsApiError';
@@ -75,7 +77,7 @@ export function Home() {
     googleMapsApiKey: env.googleApiKey,
   });
 
-  const roadTripData = useMemo(
+  const sheetTripData = useMemo(
     () =>
       parseGoogleSheetData(
         rawSheetData.find(({ id }) => id === env.tabName) ?? {
@@ -95,9 +97,66 @@ export function Home() {
   const [isReplayOpen, setIsReplayOpen] = useState(false);
   const [replayDay, setReplayDay] = useState<string>();
 
+  // Days the sheet could not calculate are looked up, so they are known to be a drive or a flight
+  const probes = useDayProbes(sheetTripData, isMapLoaded, setRouteError, retryKey);
+
+  const classifiedTripData = useMemo(
+    () =>
+      sheetTripData.map((day) => {
+        const probe = probes[getDayKey(day)];
+
+        if (!probe) return day;
+
+        return probe.kind === 'flight'
+          ? { ...day, distance: '0 km', time: '0:00:00' }
+          : { ...day, distance: `${probe.km} km`, time: toSheetDuration(probe.minutes) };
+      }),
+    [sheetTripData, probes],
+  );
+
+  // What Google calculated for the routes that were drawn. It replaces the sheet, whose formulas
+  // can fail, so every number in the app comes from the same place.
+  const [routeStats, setRouteStats] = useState<Record<string, { km: number; minutes: number }>>({});
+
+  const onRouteStats = useCallback(
+    (stats: Array<{ key: string; km: number; minutes: number }>) =>
+      setRouteStats((previous) => {
+        const changed = stats.filter(({ key, km, minutes }) => {
+          const known = previous[key];
+          return !known || known.km !== km || known.minutes !== minutes;
+        });
+
+        return changed.length === 0
+          ? previous
+          : {
+              ...previous,
+              ...Object.fromEntries(changed.map(({ key, km, minutes }) => [key, { km, minutes }])),
+            };
+      }),
+    [],
+  );
+
+  // The data that is shown. Only the numbers differ from the classified data, so the days that are
+  // routed do not change when a route comes in.
+  const roadTripData = useMemo(
+    () =>
+      classifiedTripData.map((day) => {
+        const stats = routeStats[getDayKey(day)];
+
+        return stats
+          ? {
+              ...day,
+              distance: `${Math.round(stats.km * 10) / 10} km`,
+              time: toSheetDuration(stats.minutes),
+            }
+          : day;
+      }),
+    [classifiedTripData, routeStats],
+  );
+
   const travelDayData = useMemo(
-    () => roadTripData.filter((day) => parseDistanceKm(day.distance) > 0),
-    [roadTripData],
+    () => classifiedTripData.filter((day) => parseDistanceKm(day.distance) > 0),
+    [classifiedTripData],
   );
 
   // The days in the list: the ones with driving and the flying days, which are shown apart
@@ -110,10 +169,19 @@ export function Home() {
   const activeDirections = useMemo(() => {
     if (!activeDay) return travelDayData;
 
-    const day = roadTripData.find(({ dayNumber }) => dayNumber === activeDay);
+    const day = classifiedTripData.find(({ dayNumber }) => dayNumber === activeDay);
 
     return day && !isFlightDay(day) ? [day] : [];
-  }, [activeDay, roadTripData, travelDayData]);
+  }, [activeDay, classifiedTripData, travelDayData]);
+
+  // The replay shows the numbers of the days, which are the calculated ones once they are known
+  const replayDays = useMemo(
+    () =>
+      activeDirections.map(
+        (day) => roadTripData.find(({ dayNumber }) => dayNumber === day.dayNumber) ?? day,
+      ),
+    [activeDirections, roadTripData],
+  );
 
   // Nothing is routed on a flying day, so the route of the previous day is no longer shown
   useEffect(() => {
@@ -179,7 +247,7 @@ export function Home() {
   // New data can mean new addresses, so earlier results no longer say anything
   useEffect(() => {
     routeResults.current.clear();
-  }, [roadTripData]);
+  }, [sheetTripData]);
 
   const retryRoute = useCallback(() => {
     forgetFailedRoutes();
@@ -318,6 +386,7 @@ export function Home() {
                 onError={onRouteError}
                 onReady={onRouteReady}
                 onRouteChange={setRouteDirections}
+                onStats={onRouteStats}
                 padding={dayExport.isExporting ? EXPORT_PADDING : undefined}
               />
             )}
@@ -419,7 +488,7 @@ export function Home() {
 
         {isReplayOpen && !isDataLoading && activeDirections.length > 0 && (
           <TripReplay
-            days={activeDirections}
+            days={replayDays}
             directions={routeDirections}
             getMap={getMap}
             onDayChange={setReplayDay}

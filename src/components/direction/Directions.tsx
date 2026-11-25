@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { DirectionsRenderer, DirectionsService, useGoogleMap } from '@react-google-maps/api';
 import { describeDirectionsStatus, UserFacingError } from '../../utils/errors';
-import { getRouteId } from '../../utils/routeId';
+import { getDayKey, getRouteId } from '../../utils/routeId';
+import { sumLegs } from './dayProbe';
 import { buildWaypoints, Direction, getRouteKey } from './directionsRequest';
 import { RouteMarkers } from './RouteMarkers';
 import { deriveDayRoute, routeCache } from './routeCache';
@@ -24,17 +25,34 @@ type DirectionProps = {
   onReady?: (routeId: string) => void;
   /** Called with the route that is shown, and with null while there is none */
   onRouteChange?: (directions: google.maps.DirectionsResult | null) => void;
+  /**
+   * Called with the distance and drive time of every day of the route, as Google calculated them.
+   * The key is the one of getDayKey.
+   */
+  onStats?: (stats: Array<{ key: string; km: number; minutes: number }>) => void;
   /** Room to keep free around the route, defaults to the space around the floating panel */
   padding?: google.maps.Padding;
 };
 
-function Directions({ data, trip, onError, onReady, onRouteChange, padding }: DirectionProps) {
+function Directions({
+  data,
+  trip,
+  onError,
+  onReady,
+  onRouteChange,
+  onStats,
+  padding,
+}: DirectionProps) {
   const map = useGoogleMap();
   // Kept in a ref so that a new callback does not make the map fit the route again
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
   const onRouteChangeRef = useRef(onRouteChange);
   onRouteChangeRef.current = onRouteChange;
+  const onStatsRef = useRef(onStats);
+  onStatsRef.current = onStats;
+  const dataRef = useRef(data);
+  dataRef.current = data;
   const directionsRenderer = useRef<google.maps.DirectionsRenderer>(undefined);
   const [results, setResults] = useState<Record<string, google.maps.DirectionsResult>>({});
 
@@ -82,6 +100,18 @@ function Directions({ data, trip, onError, onReady, onRouteChange, padding }: Di
 
   useEffect(() => {
     onRouteChangeRef.current?.(directions);
+  }, [directions]);
+
+  // The route has a leg for every day, so what the sheet says can be replaced by what Google found
+  useEffect(() => {
+    const legs = directions?.routes[0]?.legs;
+    const days = dataRef.current;
+
+    if (!legs || legs.length < days.length) return;
+
+    onStatsRef.current?.(
+      days.map((day, index) => ({ key: getDayKey(day), ...sumLegs([legs[index]]) })),
+    );
   }, [directions]);
 
   useEffect(() => {

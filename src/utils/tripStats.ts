@@ -20,6 +20,27 @@ export function parseDurationMinutes(value: string): number {
 }
 
 /**
+ * Sheet formulas that fail leave an error like "#ERROR!" or "#N/A" in the cell, which says nothing
+ * about the real value, unlike an empty cell or "0 km"
+ */
+export function isSheetError(value: string | undefined): boolean {
+  return (value ?? '').trim().startsWith('#');
+}
+
+/**
+ * Write minutes the way the sheet does ("6:32:58"), so values taken from a calculated route read
+ * the same as the ones from the sheet
+ */
+export function toSheetDuration(totalMinutes: number): string {
+  const totalSeconds = Math.round(totalMinutes * 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+/**
  * Format minutes as "2 h 30 min", "45 min" or "3 d 2 h" for really long trips
  */
 export function formatDuration(totalMinutes: number): string {
