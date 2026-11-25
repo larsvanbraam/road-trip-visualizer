@@ -232,6 +232,7 @@ export function Home() {
           >
             <Directions
               data={activeDirections}
+              trip={travelDayData}
               onError={onRouteError}
               onReady={onRouteReady}
               padding={dayExport.isExporting ? EXPORT_PADDING : undefined}

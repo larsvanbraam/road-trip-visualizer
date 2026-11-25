@@ -3,17 +3,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DirectionsRenderer, DirectionsService, useGoogleMap } from '@react-google-maps/api';
 import { describeDirectionsStatus, UserFacingError } from '../../utils/errors';
 import { getRouteId } from '../../utils/routeId';
+import { buildWaypoints, Direction, getRouteKey } from './directionsRequest';
 import { RouteMarkers } from './RouteMarkers';
-
-type Direction = {
-  dayNumber: string;
-  morningLocation: string;
-  afternoonLocation?: string;
-  eveningLocation: string;
-};
+import { deriveDayRoute, routeCache } from './routeCache';
 
 type DirectionProps = {
   data: Array<Direction>;
+  /**
+   * All the days of the trip. The route of a single day is taken from the route of the whole trip
+   * when that is known, so it does not need a request of its own.
+   */
+  trip?: Array<Direction>;
   /**
    * Called with the reason when a route cannot be calculated, and without an error when it can.
    * The id is the one of the route it is about, see getRouteId.
@@ -36,7 +36,7 @@ function getViewportPadding(): google.maps.Padding {
     : { top: 80, right: 40, bottom: window.innerHeight * 0.45 + 40, left: 40 };
 }
 
-function Directions({ data, onError, onReady, padding }: DirectionProps) {
+function Directions({ data, trip, onError, onReady, padding }: DirectionProps) {
   const map = useGoogleMap();
   // Kept in a ref so that a new callback does not make the map fit the route again
   const onReadyRef = useRef(onReady);
@@ -49,36 +49,29 @@ function Directions({ data, onError, onReady, padding }: DirectionProps) {
 
   const id = useMemo(() => getRouteId(data), [data]);
 
-  const stopCount = data.length;
-  const waypoints = useMemo(
-    () =>
-      data.reduce(
-        (accumulator, { afternoonLocation, eveningLocation }) =>
-          [
-            ...accumulator,
-            ...(afternoonLocation
-              ? afternoonLocation.split('|').map((location) => ({ location, stopover: false }))
-              : []),
-            stopCount > 1 ? { location: eveningLocation } : undefined,
-          ].filter(Boolean) as Array<google.maps.DirectionsWaypoint>,
-        [] as Array<google.maps.DirectionsWaypoint>,
-      ),
-    [stopCount, data],
-  );
+  const waypoints = useMemo(() => buildWaypoints(data), [data]);
 
   // Results are remembered per route and addresses, so changed addresses are looked up again
-  const cacheKey = useMemo(
-    () => JSON.stringify([id, origin, destination, waypoints]),
-    [id, origin, destination, waypoints],
-  );
+  const cacheKey = useMemo(() => getRouteKey(data), [data]);
   const latestCacheKey = useRef(cacheKey);
   latestCacheKey.current = cacheKey;
 
-  const directions = results[cacheKey] ?? null;
+  // A route that was calculated before, also by an earlier version of this component, is reused
+  const known = results[cacheKey] ?? routeCache.get(cacheKey);
+  const tripKey = useMemo(() => (trip ? getRouteKey(trip) : undefined), [trip]);
+  const tripRoute = tripKey ? (results[tripKey] ?? routeCache.get(tripKey)) : undefined;
+
+  const directions = useMemo(() => {
+    if (known) return known;
+    if (!trip || !tripRoute || data.length !== 1) return null;
+
+    return deriveDayRoute(trip, tripRoute, data[0]) ?? null;
+  }, [data, known, trip, tripRoute]);
 
   const onDirectionsCallback = useCallback(
     (response: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
       if (status === 'OK' && response !== null) {
+        routeCache.set(cacheKey, response);
         setResults((previous) => ({ ...previous, [cacheKey]: response }));
         // A late answer for a route that is no longer shown only fills the cache
         if (cacheKey === latestCacheKey.current) onError?.(undefined, id);
