@@ -11,7 +11,7 @@ export function ExportAllButton({ onClick, disabled }: ExportAllButtonProps) {
     <Button
       size="lg"
       aria-label="Export all days"
-      className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0"
+      className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0 max-md:has-data-[icon=inline-start]:pl-0"
       onClick={onClick}
       disabled={disabled}
     >

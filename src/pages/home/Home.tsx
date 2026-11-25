@@ -350,7 +350,7 @@ export function Home() {
         )}
         <Button
           size="lg"
-          className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0"
+          className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0 max-md:has-data-[icon=inline-start]:pl-0"
           aria-label={isReplayOpen ? 'Close replay' : 'Replay trip'}
           aria-pressed={isReplayOpen}
           disabled={
