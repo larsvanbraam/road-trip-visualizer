@@ -10,6 +10,8 @@
 ![Google Maps](https://img.shields.io/badge/Google_Maps-API-4285f4?logo=googlemaps&logoColor=white&style=flat-square)
 ![License](https://img.shields.io/github/license/larsvanbraam/road-trip-visualizer?style=flat-square)
 
+**[🌍 Try the live demo](https://roadtrip.larsvanbraam.nl)**
+
 <img src="/screenshots/screenshot.webp?raw=true" alt="Main page of the visualizer" width="820">
 
 </div>
@@ -36,6 +38,14 @@ Google offers [MyMaps](https://www.google.com/maps/d/u/0/?hl=nl) for custom maps
 felt clunky and meant maintaining two sources, as our planning lived in Google Sheets.
 
 So I thought: "Why not do it myself? 🤔" And so this project was born. 💪
+
+## 🌍 Live demo
+
+Want to see it in action first? Open **[roadtrip.larsvanbraam.nl](https://roadtrip.larsvanbraam.nl)**.
+
+> [!NOTE]
+> The demo is rate limited to **30 requests per minute per user** to keep API costs in check. If you
+> hit the limit, wait a minute and try again, or run your own copy with the steps below.
 
 ## 🧰 Built with
 
