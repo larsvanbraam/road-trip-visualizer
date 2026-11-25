@@ -8,6 +8,7 @@ import { RoadTrip } from '../../types/roadTrip.types';
 import {
   formatDuration,
   getTripStats,
+  isSheetError,
   parseDistanceKm,
   parseDurationMinutes,
 } from '../../utils/tripStats';
@@ -145,11 +146,16 @@ function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: Si
                     <span className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Route className="size-3" aria-hidden />
-                        {numberFormat.format(parseDistanceKm(day.distance))} km
+                        {isSheetError(day.distance)
+                          ? '–'
+                          : numberFormat.format(parseDistanceKm(day.distance))}{' '}
+                        km
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" aria-hidden />
-                        {formatDuration(parseDurationMinutes(day.time))}
+                        {isSheetError(day.time)
+                          ? '–'
+                          : formatDuration(parseDurationMinutes(day.time))}
                       </span>
                     </span>
                   )}

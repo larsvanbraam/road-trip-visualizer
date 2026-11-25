@@ -19,10 +19,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
-import { parseDistanceKm, toSheetDuration } from '../../utils/tripStats';
+import { toSheetDuration } from '../../utils/tripStats';
 import { getDayKey } from '../../utils/routeId';
 import { useDayProbes } from '../../hooks/useDayProbes';
-import { isFlightDay } from '../../utils/flights';
+import { isDrivingDay, isFlightDay, needsRouteLookup } from '../../utils/flights';
 import { useSheetStore } from '../../state/sheetState';
 import { useMapsApiError } from '../../hooks/useMapsApiError';
 import { useSheetTitle } from '../../hooks/useSheetTitle';
@@ -154,14 +154,22 @@ export function Home() {
     [classifiedTripData, routeStats],
   );
 
-  const travelDayData = useMemo(
-    () => classifiedTripData.filter((day) => parseDistanceKm(day.distance) > 0),
+  // The route of the whole trip assumes every day starts where the previous one ended, so it is
+  // only made once every day is known to be a drive or a flight
+  const hasUnknownDays = useMemo(
+    () => classifiedTripData.some(needsRouteLookup),
     [classifiedTripData],
+  );
+
+  const travelDayData = useMemo(
+    () => (hasUnknownDays ? [] : classifiedTripData.filter(isDrivingDay)),
+    [classifiedTripData, hasUnknownDays],
   );
 
   // The days in the list: the ones with driving and the flying days, which are shown apart
   const listDayData = useMemo(
-    () => roadTripData.filter((day) => parseDistanceKm(day.distance) > 0 || isFlightDay(day)),
+    () =>
+      roadTripData.filter((day) => isDrivingDay(day) || isFlightDay(day) || needsRouteLookup(day)),
     [roadTripData],
   );
 

@@ -109,9 +109,14 @@ function Directions({
 
     if (!legs || legs.length < days.length) return;
 
-    onStatsRef.current?.(
-      days.map((day, index) => ({ key: getDayKey(day), ...sumLegs([legs[index]]) })),
+    // A leg starts where the previous day ended, so it only belongs to the day when that is true
+    const stats = days.flatMap((day, index) =>
+      index === 0 || days[index - 1].eveningLocation === day.morningLocation
+        ? [{ key: getDayKey(day), ...sumLegs([legs[index]]) }]
+        : [],
     );
+
+    if (stats.length > 0) onStatsRef.current?.(stats);
   }, [directions]);
 
   useEffect(() => {

@@ -7,6 +7,14 @@ type FlightCandidate = Pick<RoadTripStop, 'morningLocation' | 'eveningLocation'>
 const normalize = (value?: string) => (value ?? '').trim().toLowerCase();
 
 /**
+ * A day with driving: the sheet gives a distance or a drive time. Either can be missing when a
+ * formula failed, so one of them is enough.
+ */
+export function isDrivingDay({ distance, time }: Partial<FlightCandidate>): boolean {
+  return parseDistanceKm(distance ?? '') > 0 || parseDurationMinutes(time ?? '') > 0;
+}
+
+/**
  * The sheet could not calculate the distance of a day that goes from one place to another, for
  * example because a quota of its formulas was reached. Such a day can be a flight or a drive, so
  * it has to be looked up, see probeDay.

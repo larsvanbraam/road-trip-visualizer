@@ -1,3 +1,4 @@
+import { isDrivingDay, needsRouteLookup } from '../../utils/flights';
 import { Bed, Circle, Clock, MapPin, Navigation, Route } from 'lucide-react';
 import React, { MutableRefObject, useCallback, useImperativeHandle, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import {
   formatDuration,
   formatTripDate,
   getTripStats,
+  isSheetError,
   parseDistanceKm,
   parseDurationMinutes,
   parseViaStops,
@@ -90,11 +92,14 @@ function DrivingDay({ stop, isActive, onViewRoute }: DayProps) {
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Route className="size-3" aria-hidden />
-            {numberFormat.format(parseDistanceKm(stop.distance))} km
+            {isSheetError(stop.distance)
+              ? '–'
+              : numberFormat.format(parseDistanceKm(stop.distance))}{' '}
+            km
           </span>
           <span className="flex items-center gap-1">
             <Clock className="size-3" aria-hidden />
-            {formatDuration(parseDurationMinutes(stop.time))}
+            {isSheetError(stop.time) ? '–' : formatDuration(parseDurationMinutes(stop.time))}
           </span>
         </div>
       </div>
@@ -144,7 +149,7 @@ function TripOverview({ data, activeDay, onDayClick, handlesRef }: TripOverviewP
     [onDayClick, setDrawer],
   );
 
-  const drivingDays = data.filter(({ distance }) => parseDistanceKm(distance) > 0);
+  const drivingDays = data.filter(isDrivingDay);
   const stats = getTripStats(drivingDays);
 
   return (
@@ -163,7 +168,7 @@ function TripOverview({ data, activeDay, onDayClick, handlesRef }: TripOverviewP
 
         <ol className="flex flex-col gap-2 overflow-auto p-4">
           {data.map((stop) =>
-            parseDistanceKm(stop.distance) > 0 ? (
+            isDrivingDay(stop) || needsRouteLookup(stop) ? (
               <DrivingDay
                 key={stop.dayNumber}
                 stop={stop}

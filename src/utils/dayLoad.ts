@@ -33,6 +33,13 @@ export function getDayLoads(trip: RoadTrip): Array<DayLoad> {
     const km = parseDistanceKm(distance);
     const minutes = parseDurationMinutes(time);
 
-    return { dayNumber, date, minutes, km, isRestDay: km <= 0, level: getLoadLevel(minutes) };
+    return {
+      dayNumber,
+      date,
+      minutes,
+      km,
+      isRestDay: km <= 0 && minutes <= 0,
+      level: getLoadLevel(minutes),
+    };
   });
 }

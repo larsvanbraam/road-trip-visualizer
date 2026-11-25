@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { getGreatCircleMidpoint, isFlightDay, needsRouteLookup } from './flights';
+import { getGreatCircleMidpoint, isDrivingDay, isFlightDay, needsRouteLookup } from './flights';
 
 const flight = {
   morningLocation: 'Utrecht',
@@ -29,6 +29,19 @@ describe('isFlightDay', () => {
   it('is not a flight when a place is missing', () => {
     expect(isFlightDay({ ...flight, eveningLocation: '' })).toBe(false);
     expect(isFlightDay({ ...flight, morningLocation: '  ' })).toBe(false);
+  });
+});
+
+describe('isDrivingDay', () => {
+  it('is a driving day when the sheet gives either a distance or a drive time', () => {
+    expect(isDrivingDay({ distance: '183 km', time: '#ERROR!' })).toBe(true);
+    expect(isDrivingDay({ distance: '#ERROR!', time: '1:53:25' })).toBe(true);
+  });
+
+  it('is not when neither is known or both are zero', () => {
+    expect(isDrivingDay({ distance: '#ERROR!', time: '#ERROR!' })).toBe(false);
+    expect(isDrivingDay({ distance: '0 km', time: '0:00:00' })).toBe(false);
+    expect(isDrivingDay({})).toBe(false);
   });
 });
 
