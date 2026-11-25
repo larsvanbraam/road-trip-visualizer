@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { RouterLink } from '../../config/router';
 import { SheetSetupDialog } from '../sheet-setup/SheetSetupDialog';
 import { useSheetStore } from '../../state/sheetState';
+import { trackEvent } from '../../utils/analytics';
 
 type NavigationProps = {
   onMapSizeChange: (size: MapSize) => void;
@@ -29,7 +30,11 @@ export enum MapSize {
 
 const mapSizes = [
   { value: MapSize.Cover, label: 'Fill the screen', icon: Maximize2 },
-  { value: MapSize.Fixed, label: 'Fixed 1280 × 720 (for screenshots)', icon: Square },
+  {
+    value: MapSize.Fixed,
+    label: 'Fixed 1280 × 720 (for screenshots)',
+    icon: Square,
+  },
 ];
 
 const iconButton = buttonVariants({ variant: 'ghost', size: 'icon' });
@@ -44,6 +49,7 @@ function Navigation({ onMapSizeChange, onUpdateData, isDataLoading, className }:
 
   const onSizeChange = useCallback(
     (size: MapSize) => {
+      trackEvent('map_size_changed', { size });
       setMapSize(size);
       onMapSizeChange(size);
     },
@@ -60,7 +66,10 @@ function Navigation({ onMapSizeChange, onUpdateData, isDataLoading, className }:
           <TooltipTrigger
             aria-label="How to set up your sheet"
             className={iconButton}
-            onClick={() => setIsSetupOpen(true)}
+            onClick={() => {
+              trackEvent('setup_guide_opened', { source: 'navigation' });
+              setIsSetupOpen(true);
+            }}
           >
             <CircleHelp />
           </TooltipTrigger>
@@ -71,6 +80,7 @@ function Navigation({ onMapSizeChange, onUpdateData, isDataLoading, className }:
           <TooltipTrigger
             aria-label="View source sheet"
             className={iconButton}
+            onClick={() => trackEvent('source_sheet_opened')}
             render={
               <a
                 href={`https://docs.google.com/spreadsheets/d/${sheetId}`}
@@ -100,7 +110,10 @@ function Navigation({ onMapSizeChange, onUpdateData, isDataLoading, className }:
             aria-label="Update data"
             disabled={isDataLoading}
             className={iconButton}
-            onClick={onUpdateData}
+            onClick={() => {
+              trackEvent('data_reloaded');
+              onUpdateData();
+            }}
           >
             <RefreshCw className={cn(isDataLoading && 'animate-spin')} />
           </TooltipTrigger>

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import React, { useCallback } from 'react';
 import { toKebabCase } from '../../utils/toKebabCase';
 import { RoadTrip } from '../../types/roadTrip.types';
+import { trackEvent } from '../../utils/analytics';
 
 type ScreenShotButtonProps = Omit<React.ComponentProps<typeof Button>, 'onClick'> & {
   data: RoadTrip;
@@ -18,6 +19,7 @@ function ScreenshotButton({
 }: ScreenShotButtonProps) {
   // Does not work correctly in chrome 😭
   const onScreenshotClick = useCallback(() => {
+    trackEvent('screenshot_taken', { scope: activeDay ? 'day' : 'trip' });
     const targetElement = document.body.querySelector<HTMLDivElement>(targetSelector);
 
     if (!targetElement)

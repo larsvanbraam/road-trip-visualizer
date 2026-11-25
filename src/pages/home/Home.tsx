@@ -18,6 +18,7 @@ import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
 import { parseDistanceKm } from '../../utils/tripStats';
 import { useSheetStore } from '../../state/sheetState';
+import { trackEvent } from '../../utils/analytics';
 
 // Hide points of interest and transit stops so the route stands out
 const mapStyles: Array<google.maps.MapTypeStyle> = [
@@ -26,7 +27,12 @@ const mapStyles: Array<google.maps.MapTypeStyle> = [
 ];
 
 // Screenshots are framed evenly, there is no floating panel in them
-const EXPORT_PADDING: google.maps.Padding = { top: 60, right: 60, bottom: 60, left: 60 };
+const EXPORT_PADDING: google.maps.Padding = {
+  top: 60,
+  right: 60,
+  bottom: 60,
+  left: 60,
+};
 const ROUTE_TIMEOUT_MS = 20_000;
 
 const mapSizeConfiguration = {
@@ -151,6 +157,7 @@ export function Home() {
 
   const onShowRouteClick = useCallback(
     (day: string) => {
+      trackEvent(activeDay === day ? 'whole_trip_shown' : 'day_selected');
       setActiveDay(activeDay === day ? undefined : day);
       setRouteError(undefined);
     },
@@ -180,6 +187,17 @@ export function Home() {
     element.style.width = width;
     element.style.height = height;
   }, []);
+
+  // Report once per loaded sheet, so a reload counts again but a re-render does not
+  useEffect(() => {
+    if (error) trackEvent('sheet_load_failed');
+  }, [error]);
+
+  useEffect(() => {
+    if (!isDataLoading && roadTripData.length > 0) {
+      trackEvent('sheet_loaded', { days: roadTripData.length });
+    }
+  }, [isDataLoading, roadTripData.length]);
 
   if (!sheetId) {
     return <Navigate to="/enter-sheet-id" replace />;
@@ -252,6 +270,7 @@ export function Home() {
           activeDay={activeDay}
           onDayClick={onShowRouteClick}
           onFullOverviewClick={() => {
+            trackEvent('overview_toggled');
             tripOverviewHandles.current?.toggleDrawer();
           }}
         />
@@ -278,6 +297,7 @@ export function Home() {
             className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
             aria-label="Clear selection"
             onClick={() => {
+              trackEvent('whole_trip_shown');
               setActiveDay(undefined);
               setRouteError(undefined);
             }}

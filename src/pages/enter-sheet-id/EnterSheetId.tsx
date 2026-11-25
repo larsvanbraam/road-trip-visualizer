@@ -14,6 +14,7 @@ import { UserFacingError } from '../../utils/errors';
 import { env } from '../../config/env';
 import { promoteSheetId } from '../../utils/sheetHistory';
 import { useSheetStore } from '../../state/sheetState';
+import { trackEvent } from '../../utils/analytics';
 
 // Hide points of interest and transit stops so the map stays calm
 const mapStyles: Array<google.maps.MapTypeStyle> = [
@@ -53,6 +54,7 @@ export function EnterSheetId() {
 
   const onDeleteSheetId = useCallback(
     (value: string) => {
+      trackEvent('recent_sheet_removed');
       const localSheetIds = [...sheetIds];
       const index = getSheetIdIndex(value);
 
@@ -74,6 +76,7 @@ export function EnterSheetId() {
         throw new Error('No id was provided');
       }
 
+      trackEvent('sheet_submitted');
       setSheetIds((sheetIds) => promoteSheetId(sheetIds, newSheetId));
 
       onSelectSheetId(newSheetId);
@@ -135,11 +138,19 @@ export function EnterSheetId() {
                 href={TEMPLATE_COPY_URL}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackEvent('template_clicked')}
                 className={buttonVariants({ size: 'sm' })}
               >
                 Get the template
               </a>
-              <Button variant="ghost" size="sm" onClick={() => setIsSetupOpen(true)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  trackEvent('setup_guide_opened', { source: 'enter_sheet' });
+                  setIsSetupOpen(true);
+                }}
+              >
                 How it works
               </Button>
             </div>
@@ -157,7 +168,10 @@ export function EnterSheetId() {
                     <button
                       type="button"
                       className="flex min-w-0 grow items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                      onClick={() => onSelectSheetId(value)}
+                      onClick={() => {
+                        trackEvent('recent_sheet_selected');
+                        onSelectSheetId(value);
+                      }}
                     >
                       <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                       <span className="truncate font-mono">{value}</span>

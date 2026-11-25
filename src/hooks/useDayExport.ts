@@ -8,6 +8,7 @@ import {
   ExportFile,
 } from '../utils/dayExport';
 import { UserFacingError } from '../utils/errors';
+import { trackEvent } from '../utils/analytics';
 
 export type RouteResult = 'ready' | 'failed';
 
@@ -91,9 +92,14 @@ export function useDayExport({
     const files: Array<ExportFile> = [];
     const skipped: Array<string> = [];
 
+    trackEvent('export_started', { days: days.length });
     isCancelled.current = false;
     setNotice(undefined);
-    setProgress({ current: 0, total: targets.length, label: 'Getting ready...' });
+    setProgress({
+      current: 0,
+      total: targets.length,
+      label: 'Getting ready...',
+    });
 
     try {
       const { default: html2canvas } = await import('html2canvas-pro');
@@ -108,7 +114,11 @@ export function useDayExport({
       for (const [index, target] of targets.entries()) {
         if (isCancelled.current) break;
 
-        setProgress({ current: index + 1, total: targets.length, label: target.label });
+        setProgress({
+          current: index + 1,
+          total: targets.length,
+          label: target.label,
+        });
 
         showDay(target.dayNumber);
 
@@ -121,10 +131,19 @@ export function useDayExport({
         await sleep(SETTLE_DELAY_MS);
 
         const canvas = await html2canvas(element, { useCORS: true, scale: 1 });
-        files.push({ name: target.fileName, data: await canvasToPngBytes(canvas) });
+        files.push({
+          name: target.fileName,
+          data: await canvasToPngBytes(canvas),
+        });
       }
 
+      if (isCancelled.current) trackEvent('export_cancelled');
+
       if (!isCancelled.current && files.length > 0) {
+        trackEvent('export_completed', {
+          files: files.length,
+          skipped: skipped.length,
+        });
         downloadBlob(
           new Blob([createZip(files).slice()], { type: 'application/zip' }),
           ZIP_FILE_NAME,
@@ -152,5 +171,11 @@ export function useDayExport({
     }
   }, [activeDay, days, getMap, showDay, waitForRoute]);
 
-  return { start, cancel, progress, notice, isExporting: progress !== undefined };
+  return {
+    start,
+    cancel,
+    progress,
+    notice,
+    isExporting: progress !== undefined,
+  };
 }
