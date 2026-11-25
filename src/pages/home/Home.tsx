@@ -1,4 +1,4 @@
-import { Loader2, X } from 'lucide-react';
+import { Car, Loader2, X } from 'lucide-react';
 import { ErrorAlert } from '../../components/error-alert/ErrorAlert';
 import { describeMissingTab, describeSheetError, UserFacingError } from '../../utils/errors';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { ExportAllButton } from '../../components/export/ExportAllButton';
 import { ExportOverlay } from '../../components/export/ExportOverlay';
 import { RouteResult, useDayExport } from '../../hooks/useDayExport';
 import ScreenshotButton from '../../components/screenshot-button/ScreenshotButton';
+import { DayLoadChart } from '../../components/day-load/DayLoadChart';
+import { TripReplay } from '../../components/replay/TripReplay';
 import TripOverview, { TripOverviewHandles } from '../../components/trip-overview/TripOverview';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useGoogleSheets from 'use-google-sheets';
@@ -80,6 +82,9 @@ export function Home() {
 
   const [activeDay, setActiveDay] = useState<string>();
   const [routeError, setRouteError] = useState<UserFacingError>();
+  const [routeDirections, setRouteDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [isReplayOpen, setIsReplayOpen] = useState(false);
+  const [replayDay, setReplayDay] = useState<string>();
 
   const travelDayData = useMemo(
     () => roadTripData.filter((day) => parseDistanceKm(day.distance) > 0),
@@ -253,6 +258,7 @@ export function Home() {
               trip={travelDayData}
               onError={onRouteError}
               onReady={onRouteReady}
+              onRouteChange={setRouteDirections}
               padding={dayExport.isExporting ? EXPORT_PADDING : undefined}
             />
           </GoogleMap>
@@ -306,12 +312,42 @@ export function Home() {
             Show whole trip
           </Button>
         )}
+        <Button
+          size="lg"
+          className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
+          aria-pressed={isReplayOpen}
+          disabled={isDataLoading || travelDayData.length === 0 || dayExport.isExporting}
+          onClick={() => setIsReplayOpen((open) => !open)}
+        >
+          <Car data-icon="inline-start" />
+          {isReplayOpen ? 'Close replay' : 'Replay trip'}
+        </Button>
         <ExportAllButton
           onClick={() => void dayExport.start()}
           disabled={dayExport.isExporting || isDataLoading || travelDayData.length === 0}
         />
         <ScreenshotButton data={roadTripData} activeDay={activeDay} />
       </div>
+
+      {!isDataLoading && (
+        <DayLoadChart
+          data={roadTripData}
+          activeDay={activeDay}
+          replayDay={replayDay}
+          onDayClick={onShowRouteClick}
+          className="absolute z-10 hidden md:bottom-10 md:left-[404px] md:block md:w-[min(640px,calc(100vw-404px-240px))]"
+        />
+      )}
+
+      {isReplayOpen && !isDataLoading && (
+        <TripReplay
+          days={activeDirections}
+          directions={routeDirections}
+          getMap={getMap}
+          onDayChange={setReplayDay}
+          onClose={() => setIsReplayOpen(false)}
+        />
+      )}
 
       {dayExport.progress && (
         <ExportOverlay progress={dayExport.progress} onCancel={dayExport.cancel} />

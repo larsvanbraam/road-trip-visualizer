@@ -6,6 +6,7 @@ import { getRouteId } from '../../utils/routeId';
 import { buildWaypoints, Direction, getRouteKey } from './directionsRequest';
 import { RouteMarkers } from './RouteMarkers';
 import { deriveDayRoute, routeCache } from './routeCache';
+import { getViewportPadding } from './viewport';
 
 type DirectionProps = {
   data: Array<Direction>;
@@ -21,26 +22,19 @@ type DirectionProps = {
   onError?: (error?: UserFacingError, routeId?: string) => void;
   /** Called once the route is drawn and the map is moving to show it */
   onReady?: (routeId: string) => void;
+  /** Called with the route that is shown, and with null while there is none */
+  onRouteChange?: (directions: google.maps.DirectionsResult | null) => void;
   /** Room to keep free around the route, defaults to the space around the floating panel */
   padding?: google.maps.Padding;
 };
 
-/**
- * Room to keep free around the route so it is not hidden behind the floating panel and toolbar
- */
-function getViewportPadding(): google.maps.Padding {
-  const isDesktop = window.innerWidth >= 768;
-
-  return isDesktop
-    ? { top: 80, right: 80, bottom: 80, left: 420 }
-    : { top: 80, right: 40, bottom: window.innerHeight * 0.45 + 40, left: 40 };
-}
-
-function Directions({ data, trip, onError, onReady, padding }: DirectionProps) {
+function Directions({ data, trip, onError, onReady, onRouteChange, padding }: DirectionProps) {
   const map = useGoogleMap();
   // Kept in a ref so that a new callback does not make the map fit the route again
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
+  const onRouteChangeRef = useRef(onRouteChange);
+  onRouteChangeRef.current = onRouteChange;
   const directionsRenderer = useRef<google.maps.DirectionsRenderer>(undefined);
   const [results, setResults] = useState<Record<string, google.maps.DirectionsResult>>({});
 
@@ -85,6 +79,10 @@ function Directions({ data, trip, onError, onReady, padding }: DirectionProps) {
   const onDirectionsRendererCallback = useCallback((renderer: google.maps.DirectionsRenderer) => {
     directionsRenderer.current = renderer;
   }, []);
+
+  useEffect(() => {
+    onRouteChangeRef.current?.(directions);
+  }, [directions]);
 
   useEffect(() => {
     const bounds = directions?.routes[0]?.bounds;

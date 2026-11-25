@@ -12,6 +12,8 @@ export type AnalyticsEvent =
   | 'day_selected'
   | 'whole_trip_shown'
   | 'overview_toggled'
+  | 'replay_started'
+  | 'day_load_toggled'
   | 'data_reloaded'
   | 'map_size_changed'
   | 'source_sheet_opened'
