@@ -20,7 +20,7 @@ type DirectionProps = {
    * Called with the reason when a route cannot be calculated, and without an error when it can.
    * The id is the one of the route it is about, see getRouteId.
    */
-  onError?: (error?: UserFacingError, routeId?: string) => void;
+  onError?: (error?: UserFacingError, routeId?: string, status?: string) => void;
   /** Called once the route is drawn and the map is moving to show it */
   onReady?: (routeId: string) => void;
   /** Called with the route that is shown, and with null while there is none */
@@ -88,7 +88,7 @@ function Directions({
         // A late answer for a route that is no longer shown only fills the cache
         if (cacheKey === latestCacheKey.current) onError?.(undefined, id);
       } else if (cacheKey === latestCacheKey.current) {
-        onError?.(describeDirectionsStatus(status, origin, destination), id);
+        onError?.(describeDirectionsStatus(status, origin, destination), id, status);
       }
     },
     [cacheKey, destination, id, onError, origin],

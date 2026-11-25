@@ -22,7 +22,7 @@ import { Navigate } from 'react-router-dom';
 import { toSheetDuration } from '../../utils/tripStats';
 import { getDayKey } from '../../utils/routeId';
 import { useDayProbes } from '../../hooks/useDayProbes';
-import { isDrivingDay, isFlightDay, needsRouteLookup } from '../../utils/flights';
+import { getTravelDays, isDrivingDay, isFlightDay, needsRouteLookup } from '../../utils/flights';
 import { useSheetStore } from '../../state/sheetState';
 import { useMapsApiError } from '../../hooks/useMapsApiError';
 import { useSheetTitle } from '../../hooks/useSheetTitle';
@@ -97,8 +97,21 @@ export function Home() {
   const [isReplayOpen, setIsReplayOpen] = useState(false);
   const [replayDay, setReplayDay] = useState<string>();
 
-  // Days the sheet could not calculate are looked up, so they are known to be a drive or a flight
-  const probes = useDayProbes(sheetTripData, isMapLoaded, setRouteError, retryKey);
+  // Days the sheet could not calculate are first assumed to be drives, so the whole trip takes one
+  // request. Only when Google finds no route for it, a flight is among them, and every one of those
+  // days is looked up to find out which.
+  const [isLookingUpDays, setIsLookingUpDays] = useState(false);
+  const probes = useDayProbes(
+    sheetTripData,
+    isMapLoaded && isLookingUpDays,
+    setRouteError,
+    retryKey,
+  );
+
+  // New data can have other days, which start with the assumption again
+  useEffect(() => {
+    setIsLookingUpDays(false);
+  }, [sheetTripData]);
 
   const classifiedTripData = useMemo(
     () =>
@@ -154,16 +167,9 @@ export function Home() {
     [classifiedTripData, routeStats],
   );
 
-  // The route of the whole trip assumes every day starts where the previous one ended, so it is
-  // only made once every day is known to be a drive or a flight
-  const hasUnknownDays = useMemo(
-    () => classifiedTripData.some(needsRouteLookup),
-    [classifiedTripData],
-  );
-
   const travelDayData = useMemo(
-    () => (hasUnknownDays ? [] : classifiedTripData.filter(isDrivingDay)),
-    [classifiedTripData, hasUnknownDays],
+    () => getTravelDays(classifiedTripData, isLookingUpDays),
+    [classifiedTripData, isLookingUpDays],
   );
 
   // The days in the list: the ones with driving and the flying days, which are shown apart
@@ -264,11 +270,24 @@ export function Home() {
   }, [forgetFailedRoutes]);
 
   const onRouteError = useCallback(
-    (error?: UserFacingError, routeId?: string) => {
+    (error?: UserFacingError, routeId?: string, status?: string) => {
+      const isNoRoute = status === 'ZERO_RESULTS' || status === 'NOT_FOUND';
+
+      // The assumption that the days the sheet could not calculate are drives did not hold
+      if (
+        isNoRoute &&
+        !activeDay &&
+        !isLookingUpDays &&
+        classifiedTripData.some(needsRouteLookup)
+      ) {
+        setIsLookingUpDays(true);
+        return;
+      }
+
       setRouteError(error);
       if (error && routeId) settleRoute(routeId, 'failed');
     },
-    [settleRoute],
+    [activeDay, classifiedTripData, isLookingUpDays, settleRoute],
   );
 
   const onRouteReady = useCallback(

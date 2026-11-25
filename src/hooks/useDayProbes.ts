@@ -12,7 +12,8 @@ import { getDayKey } from '../utils/routeId';
  */
 export function useDayProbes(
   days: RoadTrip,
-  isMapLoaded: boolean,
+  /** Only look the days up when asked for, as it takes a request for every day */
+  isEnabled: boolean,
   onError: (error: UserFacingError) => void,
   /** Changing it looks the days up again, for example after a quota error */
   retryKey: number,
@@ -24,7 +25,7 @@ export function useDayProbes(
   const candidates = useMemo(() => days.filter(needsRouteLookup), [days]);
 
   useEffect(() => {
-    if (!isMapLoaded) return;
+    if (!isEnabled) return;
 
     let isCurrent = true;
 
@@ -48,7 +49,7 @@ export function useDayProbes(
     return () => {
       isCurrent = false;
     };
-  }, [candidates, isMapLoaded, retryKey]);
+  }, [candidates, isEnabled, retryKey]);
 
   return probes;
 }

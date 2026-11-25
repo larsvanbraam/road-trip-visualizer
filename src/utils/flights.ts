@@ -89,3 +89,14 @@ export function getGreatCircleMidpoint(from: LatLng, to: LatLng): LatLng {
   // Keep the longitude between -180 and 180
   return { lat: toDegrees(lat), lng: ((toDegrees(lng) + 540) % 360) - 180 };
 }
+
+/**
+ * The days that are part of the route of the whole trip. Days the sheet could not calculate are
+ * assumed to be drives, so the whole trip takes one request. When that turns out not to be true
+ * (isLookingUp), they are left out until each of them is known to be a drive or a flight.
+ */
+export function getTravelDays<T extends FlightCandidate>(days: Array<T>, isLookingUp: boolean) {
+  if (!isLookingUp) return days.filter((day) => isDrivingDay(day) || needsRouteLookup(day));
+
+  return days.some(needsRouteLookup) ? [] : days.filter(isDrivingDay);
+}

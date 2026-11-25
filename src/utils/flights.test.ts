@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { getGreatCircleMidpoint, isDrivingDay, isFlightDay, needsRouteLookup } from './flights';
+import {
+  getGreatCircleMidpoint,
+  getTravelDays,
+  isDrivingDay,
+  isFlightDay,
+  needsRouteLookup,
+} from './flights';
 
 const flight = {
   morningLocation: 'Utrecht',
@@ -57,6 +63,38 @@ describe('needsRouteLookup', () => {
     expect(needsRouteLookup(flight)).toBe(false);
     expect(needsRouteLookup({ ...broken, distance: '218 km' })).toBe(false);
     expect(needsRouteLookup({ ...broken, eveningLocation: 'utrecht' })).toBe(false);
+  });
+});
+
+describe('getTravelDays', () => {
+  const place = (
+    morningLocation: string,
+    eveningLocation: string,
+    distance: string,
+    time: string,
+  ) => ({
+    morningLocation,
+    eveningLocation,
+    distance,
+    time,
+  });
+  const drive = place('A', 'B', '100 km', '1:00:00');
+  const unknown = place('B', 'C', '#ERROR!', '#ERROR!');
+  const flightDay = place('C', 'D', '0 km', '0:00:00');
+  const rest = place('D', 'D', '0 km', '0:00:00');
+
+  it('assumes days the sheet could not calculate are drives, so one request is enough', () => {
+    expect(getTravelDays([drive, unknown, flightDay, rest], false)).toEqual([drive, unknown]);
+  });
+
+  it('waits for every unknown day to be looked up once the assumption failed', () => {
+    expect(getTravelDays([drive, unknown, flightDay], true)).toEqual([]);
+  });
+
+  it('leaves out the flights and rest days when all days are known', () => {
+    const known = { ...unknown, distance: '80 km', time: '0:50:00' };
+
+    expect(getTravelDays([drive, known, flightDay, rest], true)).toEqual([drive, known]);
   });
 });
 
