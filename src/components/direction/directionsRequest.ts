@@ -1,4 +1,5 @@
 import { getRouteId } from '../../utils/routeId';
+import { parseViaStops } from '../../utils/tripStats';
 
 export type Direction = {
   dayNumber: string;
@@ -19,7 +20,7 @@ export function buildWaypoints(days: Array<Direction>): Array<google.maps.Direct
       [
         ...accumulator,
         ...(afternoonLocation
-          ? afternoonLocation.split('|').map((location) => ({ location, stopover: false }))
+          ? parseViaStops(afternoonLocation).map((location) => ({ location, stopover: false }))
           : []),
         stopCount > 1 ? { location: eveningLocation } : undefined,
       ].filter(Boolean) as Array<google.maps.DirectionsWaypoint>,

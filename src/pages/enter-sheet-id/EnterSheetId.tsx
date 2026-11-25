@@ -39,11 +39,6 @@ export function EnterSheetId() {
   const [localSheetId, setLocalSheetId] = useState<string>('');
   const [isSetupOpen, setIsSetupOpen] = useState(false);
 
-  const getSheetIdIndex = useCallback(
-    (id: string) => sheetIds.findIndex((value) => value === id),
-    [sheetIds],
-  );
-
   const onSelectSheetId = useCallback(
     (value: string) => {
       setSheetId(value);
@@ -55,14 +50,9 @@ export function EnterSheetId() {
   const onDeleteSheetId = useCallback(
     (value: string) => {
       trackEvent('recent_sheet_removed');
-      const localSheetIds = [...sheetIds];
-      const index = getSheetIdIndex(value);
-
-      localSheetIds.splice(index, 1);
-
-      setSheetIds(localSheetIds);
+      setSheetIds((current) => current.filter((id) => id !== value));
     },
-    [setSheetIds, sheetIds, getSheetIdIndex],
+    [setSheetIds],
   );
 
   const onSubmit = useCallback(

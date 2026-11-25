@@ -22,8 +22,7 @@ function ScreenshotButton({
     trackEvent('screenshot_taken', { scope: activeDay ? 'day' : 'trip' });
     const targetElement = document.body.querySelector<HTMLDivElement>(targetSelector);
 
-    if (!targetElement)
-      throw new Error('Target element cannot be found, unable to take screenshot');
+    if (!targetElement) return;
 
     void import('html2canvas-pro')
       .then(({ default: html2canvas }) => html2canvas(targetElement, { useCORS: true }))
@@ -38,6 +37,9 @@ function ScreenshotButton({
           : 'full-route.png';
         anchor.href = canvas.toDataURL();
         anchor.click();
+      })
+      .catch(() => {
+        // Nothing is downloaded, which is what the user sees; a retry is the only thing to do
       });
   }, [activeDay, data, targetSelector]);
 

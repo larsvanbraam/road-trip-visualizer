@@ -73,6 +73,14 @@ export function useDayExport({
     return () => clearTimeout(timeout);
   }, [notice]);
 
+  // Leaving the page must not keep taking screenshots of a map that is gone
+  useEffect(
+    () => () => {
+      isCancelled.current = true;
+    },
+    [],
+  );
+
   const cancel = useCallback(() => {
     isCancelled.current = true;
   }, []);

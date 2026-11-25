@@ -92,6 +92,12 @@ export function describeDirectionsStatus(
         title: 'Too many route requests',
         message: 'The Directions quota has been reached. Wait a moment and select the day again.',
       };
+    case 'MAX_WAYPOINTS_EXCEEDED':
+      return {
+        title: 'Too many stops for one route',
+        message:
+          'Google allows at most 25 stops and via points in one route. Select a single day to see its route.',
+      };
     case 'REQUEST_DENIED':
       return {
         title: 'Directions are not available',
