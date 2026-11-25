@@ -1,9 +1,10 @@
 import { OverlayViewF, PolylineF, useGoogleMap } from '@react-google-maps/api';
 import { Plane } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RoadTripStop } from '../../types/roadTrip.types';
 import { getGreatCircleMidpoint, isFlightDay } from '../../utils/flights';
 import { getViewportPadding } from '../direction/viewport';
+import { describeFlightLookupStatus, UserFacingError } from '../../utils/errors';
 import { locatePlace } from './locatePlace';
 
 type FlightLayerProps = {
@@ -13,6 +14,8 @@ type FlightLayerProps = {
   activeDay?: string;
   /** Room to keep free around the flight when the map moves to it */
   padding?: google.maps.Padding;
+  /** Called when the flights cannot be located, for example because the quota is reached */
+  onError?: (error: UserFacingError) => void;
 };
 
 type Flight = {
@@ -43,8 +46,10 @@ function Dot() {
  * The flying days of the trip: a dashed arc between where the flight starts and ends, with a plane
  * halfway. Flights have no driving route, so they are drawn apart from the Directions result.
  */
-export function FlightLayer({ days, activeDay, padding }: FlightLayerProps) {
+export function FlightLayer({ days, activeDay, padding, onError }: FlightLayerProps) {
   const map = useGoogleMap();
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
   const [located, setLocated] = useState<Array<Flight>>([]);
 
   const shown = useMemo(
@@ -61,17 +66,28 @@ export function FlightLayer({ days, activeDay, padding }: FlightLayerProps) {
   useEffect(() => {
     let isCurrent = true;
 
+    let failure: string | undefined;
+
     void Promise.all(
       shown.map(async ({ dayNumber, morningLocation, eveningLocation }) => {
-        const [from, to] = await Promise.all([
-          locatePlace(morningLocation),
-          locatePlace(eveningLocation),
-        ]);
+        try {
+          const [from, to] = await Promise.all([
+            locatePlace(morningLocation),
+            locatePlace(eveningLocation),
+          ]);
 
-        return from && to ? { dayNumber, from, to } : undefined;
+          return from && to ? { dayNumber, from, to } : undefined;
+        } catch (status) {
+          // The other flights are still shown, only this one could not be placed
+          failure ??= typeof status === 'string' ? status : 'UNKNOWN_ERROR';
+          return undefined;
+        }
       }),
     ).then((results) => {
-      if (isCurrent) setLocated(results.filter((flight) => flight !== undefined));
+      if (!isCurrent) return;
+
+      setLocated(results.filter((flight) => flight !== undefined));
+      if (failure) onErrorRef.current?.(describeFlightLookupStatus(failure));
     });
 
     return () => {

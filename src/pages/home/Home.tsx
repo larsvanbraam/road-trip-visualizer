@@ -22,6 +22,7 @@ import { Navigate } from 'react-router-dom';
 import { parseDistanceKm } from '../../utils/tripStats';
 import { isFlightDay } from '../../utils/flights';
 import { useSheetStore } from '../../state/sheetState';
+import { useMapsApiError } from '../../hooks/useMapsApiError';
 import { useSheetTitle } from '../../hooks/useSheetTitle';
 import { trackEvent } from '../../utils/analytics';
 
@@ -87,6 +88,9 @@ export function Home() {
 
   const [activeDay, setActiveDay] = useState<string>();
   const [routeError, setRouteError] = useState<UserFacingError>();
+  // Changing the key makes the route and flights be looked up again after a temporary failure
+  const [retryKey, setRetryKey] = useState(0);
+  const mapsApiError = useMapsApiError();
   const [routeDirections, setRouteDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [isReplayOpen, setIsReplayOpen] = useState(false);
   const [replayDay, setReplayDay] = useState<string>();
@@ -176,6 +180,12 @@ export function Home() {
   useEffect(() => {
     routeResults.current.clear();
   }, [roadTripData]);
+
+  const retryRoute = useCallback(() => {
+    forgetFailedRoutes();
+    setRouteError(undefined);
+    setRetryKey((key) => key + 1);
+  }, [forgetFailedRoutes]);
 
   const onRouteError = useCallback(
     (error?: UserFacingError, routeId?: string) => {
@@ -270,7 +280,15 @@ export function Home() {
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-muted">
       <div className="map-grid absolute inset-0 flex items-center justify-center">
-        {mapLoadError ? (
+        {mapsApiError ? (
+          <div className="p-8">
+            <ErrorAlert
+              className="max-w-md"
+              error={mapsApiError}
+              onRetry={() => window.location.reload()}
+            />
+          </div>
+        ) : mapLoadError ? (
           <div className="p-8">
             <ErrorAlert
               className="max-w-md"
@@ -294,6 +312,7 @@ export function Home() {
           >
             {activeDirections.length > 0 && (
               <Directions
+                key={retryKey}
                 data={activeDirections}
                 trip={travelDayData}
                 onError={onRouteError}
@@ -303,7 +322,9 @@ export function Home() {
               />
             )}
             <FlightLayer
+              key={retryKey}
               days={roadTripData}
+              onError={setRouteError}
               activeDay={activeDay}
               padding={dayExport.isExporting ? EXPORT_PADDING : undefined}
             />
@@ -340,6 +361,7 @@ export function Home() {
         <ErrorAlert
           className="absolute top-16 right-3 left-3 z-10 md:left-auto md:max-w-md"
           error={(dayExport.notice ?? routeError)!}
+          onRetry={dayExport.notice ? undefined : retryRoute}
         />
       )}
 

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { describeDirectionsStatus, describeMissingTab, describeSheetError } from './errors';
+import {
+  describeDirectionsStatus,
+  describeFlightLookupStatus,
+  describeMapsApiError,
+  parseMapsApiError,
+  describeMissingTab,
+  describeSheetError,
+} from './errors';
 
 const httpError = (status: number) =>
   new Error('Request to https://sheets.googleapis.com/v4/x?key=SECRET failed', {
@@ -63,5 +70,39 @@ describe('describeDirectionsStatus', () => {
 
   it('falls back to the raw status for unknown cases', () => {
     expect(describeDirectionsStatus('UNKNOWN_ERROR', 'a', 'b').message).toContain('UNKNOWN_ERROR');
+  });
+});
+
+describe('temporary failures', () => {
+  it('lets the user try again after a quota error', () => {
+    expect(describeDirectionsStatus('OVER_QUERY_LIMIT', 'a', 'b').retryable).toBe(true);
+    expect(describeSheetError(httpError(429)).retryable).toBe(true);
+    expect(describeFlightLookupStatus('OVER_QUERY_LIMIT').retryable).toBe(true);
+  });
+
+  it('does not offer a retry for problems a retry cannot fix', () => {
+    expect(describeDirectionsStatus('ZERO_RESULTS', 'a', 'b').retryable).toBeUndefined();
+    expect(describeDirectionsStatus('REQUEST_DENIED', 'a', 'b').retryable).toBeUndefined();
+  });
+});
+
+describe('Maps JavaScript API errors', () => {
+  it('reads the error name from the console message', () => {
+    expect(
+      parseMapsApiError('Google Maps JavaScript API error: OverQuotaMapError\nhttps://x'),
+    ).toBe('OverQuotaMapError');
+    expect(parseMapsApiError('Something else')).toBeUndefined();
+    expect(parseMapsApiError(new Error('x'))).toBeUndefined();
+  });
+
+  it('explains a used up quota and allows a retry', () => {
+    const error = describeMapsApiError('OverQuotaMapError');
+
+    expect(error.title).toBe('Google Maps limit reached');
+    expect(error.retryable).toBe(true);
+  });
+
+  it('falls back to a key problem for unknown errors', () => {
+    expect(describeMapsApiError('AuthFailure').title).toBe('Google Maps rejected the API key');
   });
 });

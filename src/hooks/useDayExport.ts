@@ -161,7 +161,7 @@ export function useDayExport({
       if (!isCancelled.current && skipped.length > 0) {
         setNotice({
           title: `Exported ${files.length} of ${targets.length} screenshots`,
-          message: `No route could be made for: ${skipped.join('; ')}. Check these addresses in your sheet.`,
+          message: `No route could be made for: ${skipped.join('; ')}. Check these addresses in your sheet, or try again later when the Google API limit was reached.`,
         });
       }
     } catch {
