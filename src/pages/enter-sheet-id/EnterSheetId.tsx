@@ -109,7 +109,7 @@ export function EnterSheetId() {
               autoFocus
               autoComplete="off"
               spellCheck={false}
-              placeholder="1zYvXpLcZZNy7MunJt6boDW7fPrg..."
+              placeholder="1Td_qAVfp4PauwQKY3MSXqOID1b..."
               className="h-11 bg-card font-mono text-sm"
               value={localSheetId}
               onChange={(event) => setLocalSheetId(event.target.value)}

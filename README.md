@@ -20,6 +20,7 @@
 
 - 🗺️ **Plots your whole trip** on a map, straight from a Google Sheet
 - 📅 **Day-by-day detail view** with the route, distance and travel time for each day
+- ✈️ **Flying days** are drawn as a dashed arc between the airports, next to the driving route
 - 🔄 **One source of truth**: keep planning in Sheets, the map follows
 - 📦 **Export every travel day** as a zip of screenshots
 
@@ -46,6 +47,15 @@ Want to see it in action first? Open **[roadtrip.larsvanbraam.nl](https://roadtr
 > [!NOTE]
 > The demo is rate limited to **30 requests per minute per user** to keep API costs in check. If you
 > hit the limit, wait a minute and try again, or run your own copy with the steps below.
+
+### 🧪 Sample trip
+
+No sheet of your own yet? Paste this sheet ID into the demo to try it out. It's a three-week trip
+through the American southwest and California, including the flights to and from Amsterdam:
+
+```
+1Td_qAVfp4PauwQKY3MSXqOID1bp7i-34D9ia2alWbUU
+```
 
 ## 🧰 Built with
 
