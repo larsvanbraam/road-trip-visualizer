@@ -7,6 +7,7 @@ import Navigation, { MapSize } from '../../components/navigation/Navigation';
 import Sidebar from '../../components/sidebar/Sidebar';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import Directions from '../../components/direction/Directions';
+import { FlightLayer } from '../../components/flight/FlightLayer';
 import { ExportAllButton } from '../../components/export/ExportAllButton';
 import { ExportOverlay } from '../../components/export/ExportOverlay';
 import { RouteResult, useDayExport } from '../../hooks/useDayExport';
@@ -19,6 +20,7 @@ import useGoogleSheets from 'use-google-sheets';
 import { parseGoogleSheetData } from '../../utils/parseGoogleSheetData';
 import { Navigate } from 'react-router-dom';
 import { parseDistanceKm } from '../../utils/tripStats';
+import { isFlightDay } from '../../utils/flights';
 import { useSheetStore } from '../../state/sheetState';
 import { useSheetTitle } from '../../hooks/useSheetTitle';
 import { trackEvent } from '../../utils/analytics';
@@ -94,11 +96,25 @@ export function Home() {
     [roadTripData],
   );
 
-  const activeDirections = useMemo(
-    () =>
-      activeDay ? [roadTripData.find(({ dayNumber }) => dayNumber === activeDay)!] : travelDayData,
-    [activeDay, roadTripData, travelDayData],
+  // The days in the list: the ones with driving and the flying days, which are shown apart
+  const listDayData = useMemo(
+    () => roadTripData.filter((day) => parseDistanceKm(day.distance) > 0 || isFlightDay(day)),
+    [roadTripData],
   );
+
+  // A flying day has no driving route, so there is nothing to ask the Directions service for
+  const activeDirections = useMemo(() => {
+    if (!activeDay) return travelDayData;
+
+    const day = roadTripData.find(({ dayNumber }) => dayNumber === activeDay);
+
+    return day && !isFlightDay(day) ? [day] : [];
+  }, [activeDay, roadTripData, travelDayData]);
+
+  // Nothing is routed on a flying day, so the route of the previous day is no longer shown
+  useEffect(() => {
+    if (activeDirections.length === 0) setRouteDirections(null);
+  }, [activeDirections]);
 
   const showDay = useCallback((day?: string) => {
     setActiveDay(day);
@@ -265,12 +281,19 @@ export function Home() {
             zoom={8}
             onLoad={onMapLoaded}
           >
-            <Directions
-              data={activeDirections}
-              trip={travelDayData}
-              onError={onRouteError}
-              onReady={onRouteReady}
-              onRouteChange={setRouteDirections}
+            {activeDirections.length > 0 && (
+              <Directions
+                data={activeDirections}
+                trip={travelDayData}
+                onError={onRouteError}
+                onReady={onRouteReady}
+                onRouteChange={setRouteDirections}
+                padding={dayExport.isExporting ? EXPORT_PADDING : undefined}
+              />
+            )}
+            <FlightLayer
+              days={roadTripData}
+              activeDay={activeDay}
               padding={dayExport.isExporting ? EXPORT_PADDING : undefined}
             />
           </GoogleMap>
@@ -285,7 +308,7 @@ export function Home() {
       <aside className="glass absolute inset-x-3 bottom-8 z-10 max-h-[45vh] overflow-hidden rounded-2xl md:inset-y-8 md:right-auto md:max-h-none md:w-[380px]">
         <Sidebar
           title={tripTitle}
-          data={travelDayData}
+          data={listDayData}
           activeDay={activeDay}
           onDayClick={onShowRouteClick}
           onFullOverviewClick={() => {
@@ -329,7 +352,12 @@ export function Home() {
           size="lg"
           className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
           aria-pressed={isReplayOpen}
-          disabled={isDataLoading || travelDayData.length === 0 || dayExport.isExporting}
+          disabled={
+            isDataLoading ||
+            travelDayData.length === 0 ||
+            activeDirections.length === 0 ||
+            dayExport.isExporting
+          }
           onClick={() => setIsReplayOpen((open) => !open)}
         >
           <Car data-icon="inline-start" />
@@ -352,7 +380,7 @@ export function Home() {
         />
       )}
 
-      {isReplayOpen && !isDataLoading && (
+      {isReplayOpen && !isDataLoading && activeDirections.length > 0 && (
         <TripReplay
           days={activeDirections}
           directions={routeDirections}

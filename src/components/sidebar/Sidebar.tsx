@@ -1,4 +1,4 @@
-import { Clock, List, Route } from 'lucide-react';
+import { Clock, List, Plane, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ import {
   parseDistanceKm,
   parseDurationMinutes,
 } from '../../utils/tripStats';
+import { isFlightDay } from '../../utils/flights';
 import { ListStop } from './components/ListStop';
 
 type SidebarProps = {
@@ -35,7 +36,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: SidebarProps) {
-  const stats = getTripStats(data);
+  // Flying days are listed, but they are not part of the driving totals
+  const stats = getTripStats(data.filter((day) => !isFlightDay(day)));
 
   return (
     <div className="flex h-full flex-col">
@@ -97,16 +99,23 @@ function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: Si
                     </span>
                     <span>Day {day.dayNumber}</span>
                   </span>
-                  <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Route className="size-3" aria-hidden />
-                      {numberFormat.format(parseDistanceKm(day.distance))} km
+                  {isFlightDay(day) ? (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Plane className="size-3" aria-hidden />
+                      Flight
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="size-3" aria-hidden />
-                      {formatDuration(parseDurationMinutes(day.time))}
+                  ) : (
+                    <span className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Route className="size-3" aria-hidden />
+                        {numberFormat.format(parseDistanceKm(day.distance))} km
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3" aria-hidden />
+                        {formatDuration(parseDurationMinutes(day.time))}
+                      </span>
                     </span>
-                  </span>
+                  )}
                 </span>
                 <span className="flex min-w-0 flex-col gap-1.5">
                   <ListStop kind="start" location={day.morningLocation} />
