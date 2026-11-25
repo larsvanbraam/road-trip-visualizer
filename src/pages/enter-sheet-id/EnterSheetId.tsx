@@ -85,7 +85,7 @@ export function EnterSheetId() {
   );
 
   return (
-    <main className="grid min-h-screen lg:grid-cols-[minmax(440px,540px)_1fr]">
+    <main className="grid min-h-dvh grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(440px,540px)_1fr]">
       <section className="flex flex-col justify-between gap-10 px-6 py-8 sm:px-12 sm:py-10">
         <Logo />
 
@@ -133,7 +133,7 @@ export function EnterSheetId() {
                 Start from our template, it works out distances and drive times for you.
               </p>
             </div>
-            <div className="flex shrink-0 gap-2 sm:flex-col">
+            <div className="flex shrink-0 flex-wrap gap-2 sm:flex-col sm:flex-nowrap">
               <a
                 href={TEMPLATE_COPY_URL}
                 target="_blank"

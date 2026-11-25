@@ -120,7 +120,11 @@ function Navigation({ onMapSizeChange, onUpdateData, isDataLoading, className }:
           <TooltipContent side="bottom">Reload the sheet</TooltipContent>
         </Tooltip>
 
-        <div role="group" aria-label="Map size" className="ml-1 flex rounded-full bg-muted p-0.5">
+        <div
+          role="group"
+          aria-label="Map size"
+          className="ml-1 hidden rounded-full bg-muted p-0.5 md:flex"
+        >
           {mapSizes.map(({ value, label, icon: Icon }) => (
             <Tooltip key={value}>
               <TooltipTrigger

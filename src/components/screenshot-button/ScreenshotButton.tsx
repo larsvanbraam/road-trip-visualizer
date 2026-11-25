@@ -45,12 +45,12 @@ function ScreenshotButton({
     <Button
       {...restProps}
       size="lg"
-      className="rounded-full shadow-lg"
+      className="rounded-full shadow-lg max-md:size-11 max-md:gap-0 max-md:p-0"
       aria-label="Take screenshot"
       onClick={onScreenshotClick}
     >
       <Camera data-icon="inline-start" />
-      Take screenshot
+      <span className="max-md:sr-only">Take screenshot</span>
     </Button>
   );
 }

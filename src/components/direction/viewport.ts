@@ -6,5 +6,6 @@ export function getViewportPadding(): google.maps.Padding {
 
   return isDesktop
     ? { top: 80, right: 80, bottom: 80, left: 420 }
-    : { top: 80, right: 40, bottom: window.innerHeight * 0.45 + 40, left: 40 };
+    : // Phones: the sheet is folded to a bar, the action buttons stack on the right edge
+      { top: 80, right: 72, bottom: 180, left: 32 };
 }

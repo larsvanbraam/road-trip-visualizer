@@ -10,12 +10,13 @@ export function ExportAllButton({ onClick, disabled }: ExportAllButtonProps) {
   return (
     <Button
       size="lg"
-      className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
+      aria-label="Export all days"
+      className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0"
       onClick={onClick}
       disabled={disabled}
     >
       <Download data-icon="inline-start" />
-      Export all days
+      <span className="max-md:sr-only">Export all days</span>
     </Button>
   );
 }

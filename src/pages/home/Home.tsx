@@ -257,7 +257,7 @@ export function Home() {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-muted">
+    <div className="relative h-dvh w-full overflow-hidden bg-muted">
       <div className="map-grid absolute inset-0 flex items-center justify-center">
         {mapLoadError ? (
           <div className="p-8">
@@ -305,7 +305,7 @@ export function Home() {
         )}
       </div>
 
-      <aside className="glass absolute inset-x-3 bottom-8 z-10 max-h-[45vh] overflow-hidden rounded-2xl md:inset-y-8 md:right-auto md:max-h-none md:w-[380px]">
+      <aside className="glass absolute inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 max-h-[60dvh] overflow-hidden rounded-2xl md:inset-y-8 md:right-auto md:max-h-none md:w-[380px]">
         <Sidebar
           title={tripTitle}
           data={listDayData}
@@ -327,16 +327,16 @@ export function Home() {
 
       {(dayExport.notice ?? routeError) && (
         <ErrorAlert
-          className="absolute top-16 right-3 z-10 max-w-md"
+          className="absolute top-16 right-3 left-3 z-10 md:left-auto md:max-w-md"
           error={(dayExport.notice ?? routeError)!}
         />
       )}
 
-      <div className="absolute right-4 bottom-8 z-10 flex flex-col items-end gap-2">
+      <div className="absolute top-16 right-3 z-10 flex flex-col items-end gap-2 md:top-auto md:right-4 md:bottom-8">
         {activeDay && (
           <Button
             size="lg"
-            className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
+            className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:h-11 max-md:px-4"
             aria-label="Clear selection"
             onClick={() => {
               trackEvent('whole_trip_shown');
@@ -350,7 +350,8 @@ export function Home() {
         )}
         <Button
           size="lg"
-          className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90"
+          className="rounded-full bg-card text-foreground shadow-lg hover:bg-card/90 max-md:size-11 max-md:gap-0 max-md:p-0"
+          aria-label={isReplayOpen ? 'Close replay' : 'Replay trip'}
           aria-pressed={isReplayOpen}
           disabled={
             isDataLoading ||
@@ -361,7 +362,7 @@ export function Home() {
           onClick={() => setIsReplayOpen((open) => !open)}
         >
           <Car data-icon="inline-start" />
-          {isReplayOpen ? 'Close replay' : 'Replay trip'}
+          <span className="max-md:sr-only">{isReplayOpen ? 'Close replay' : 'Replay trip'}</span>
         </Button>
         <ExportAllButton
           onClick={() => void dayExport.start()}

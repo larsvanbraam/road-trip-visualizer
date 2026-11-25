@@ -1,4 +1,5 @@
-import { Clock, List, Plane, Route } from 'lucide-react';
+import { ChevronUp, Clock, List, Plane, Route } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -38,10 +39,41 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: SidebarProps) {
   // Flying days are listed, but they are not part of the driving totals
   const stats = getTripStats(data.filter((day) => !isFlightDay(day)));
+  // On small screens the sidebar is a bottom sheet that starts folded, so the map stays visible
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const onDaySelect = (dayNumber: string) => {
+    setIsExpanded(false);
+    onDayClick(dayNumber);
+  };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex flex-col gap-4 p-4 pb-3">
+    <div className="flex h-full flex-col max-md:max-h-[60dvh]">
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        onClick={() => setIsExpanded((expanded) => !expanded)}
+        className="flex items-center gap-3 p-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
+      >
+        <span className="flex min-w-0 grow flex-col gap-0.5 border-l-[3px] border-brand pl-3">
+          <span className="truncate text-base leading-tight font-bold">
+            {title ?? 'Road Trip Visualizer'}
+          </span>
+          <span className="truncate text-xs text-muted-foreground tabular-nums">
+            {stats.days} days · {numberFormat.format(stats.distanceKm)} km ·{' '}
+            {formatDuration(stats.driveMinutes)}
+          </span>
+        </span>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+          <ChevronUp
+            className={cn('size-4 transition-transform', isExpanded && 'rotate-180')}
+            aria-hidden
+          />
+          <span className="sr-only">{isExpanded ? 'Hide the days' : 'Show the days'}</span>
+        </span>
+      </button>
+
+      <div className="flex flex-col gap-4 p-4 pb-3 max-md:hidden">
         <Logo />
         {title && (
           <div className="flex flex-col gap-1.5 border-l-[3px] border-brand pl-3">
@@ -64,7 +96,12 @@ function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: Si
         </p>
       </div>
 
-      <ul className="min-h-0 grow space-y-2 overflow-auto px-3 pb-3">
+      <ul
+        className={cn(
+          'min-h-0 grow space-y-2 overflow-auto px-3 pb-3',
+          !isExpanded && 'max-md:hidden',
+        )}
+      >
         {data.length === 0 &&
           Array.from({ length: 4 }, (_, index) => (
             <Skeleton key={index} className="h-[104px] w-full rounded-xl" />
@@ -76,7 +113,7 @@ function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: Si
             <li key={day.dayNumber}>
               <button
                 type="button"
-                onClick={() => onDayClick(day.dayNumber)}
+                onClick={() => onDaySelect(day.dayNumber)}
                 aria-pressed={isActive}
                 className={cn(
                   'flex w-full flex-col gap-3 rounded-xl border bg-card p-3 text-left transition',
@@ -127,7 +164,7 @@ function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: Si
         })}
       </ul>
 
-      <div className="border-t p-3">
+      <div className={cn('border-t p-3', !isExpanded && 'max-md:hidden')}>
         <Button variant="secondary" className="w-full" onClick={onFullOverviewClick}>
           <List data-icon="inline-start" />
           View full overview
