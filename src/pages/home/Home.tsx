@@ -377,7 +377,7 @@ export function Home() {
           activeDay={activeDay}
           replayDay={replayDay}
           onDayClick={onShowRouteClick}
-          className="absolute z-10 hidden md:bottom-8 md:left-[404px] md:block md:w-[min(640px,calc(100vw-404px-240px))]"
+          className="absolute z-10 hidden lg:bottom-8 lg:left-[404px] lg:block lg:w-[min(640px,calc(100vw-404px-240px))]"
         />
       )}
 
