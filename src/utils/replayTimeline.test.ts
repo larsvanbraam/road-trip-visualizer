@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   buildTimeline,
-  MS_PER_DRIVE_HOUR,
+  MIN_DRIVE_MS,
+  MS_PER_KM,
   PAUSE_MS,
   ReplayDayInput,
   sampleTimeline,
@@ -17,27 +18,34 @@ const day = (dayNumber: string, minutes: number, path: ReplayDayInput['path']): 
   path,
 });
 
-// About one degree of longitude per leg, straight along the equator
-const leg = (start: number) => [
-  { lat: 0, lng: start },
-  { lat: 0, lng: start + 1 },
-  { lat: 0, lng: start + 2 },
-];
+// Straight along the equator, where a degree of longitude is about 111 km
+const leg = (start: number, degrees = 2) =>
+  Array.from({ length: degrees + 1 }, (_, index) => ({ lat: 0, lng: start + index }));
+
+const KM_PER_DEGREE = (2 * Math.PI * 6_371) / 360;
+/** What a leg of two degrees takes */
+const LEG_MS = 2 * KM_PER_DEGREE * MS_PER_KM;
 
 describe('buildTimeline', () => {
-  it('gives every day time in proportion to its drive time, plus a pause', () => {
-    const { segments, totalMs } = buildTimeline([day('1', 60, leg(0)), day('2', 120, leg(2))]);
+  it('gives every day time in proportion to the length of its route, plus a pause', () => {
+    const { segments, totalMs } = buildTimeline([day('1', 60, leg(0)), day('2', 120, leg(2, 4))]);
 
-    expect(segments[0].driveMs).toBe(MS_PER_DRIVE_HOUR);
-    expect(segments[1].driveMs).toBe(2 * MS_PER_DRIVE_HOUR);
-    expect(segments[1].startMs).toBe(MS_PER_DRIVE_HOUR + PAUSE_MS);
-    expect(totalMs).toBe(3 * MS_PER_DRIVE_HOUR + 2 * PAUSE_MS);
+    expect(segments[0].driveMs).toBeCloseTo(LEG_MS, 3);
+    expect(segments[1].driveMs).toBeCloseTo(2 * LEG_MS, 3);
+    expect(segments[1].startMs).toBeCloseTo(LEG_MS + PAUSE_MS, 3);
+    expect(totalMs).toBeCloseTo(3 * LEG_MS + 2 * PAUSE_MS, 3);
   });
 
-  it('does not let a short or unknown drive time vanish', () => {
-    const { segments } = buildTimeline([day('1', 0, leg(0))]);
+  it('keeps the same speed whatever the drive time in the sheet says', () => {
+    const [slow, unknown] = buildTimeline([day('1', 600, leg(0)), day('2', 0, leg(2))]).segments;
 
-    expect(segments[0].driveMs).toBeGreaterThan(0);
+    expect(slow.driveMs).toBeCloseTo(unknown.driveMs, 3);
+  });
+
+  it('does not let a very short drive vanish', () => {
+    const { segments } = buildTimeline([day('1', 0, [{ lat: 0, lng: 0 }])]);
+
+    expect(segments[0].driveMs).toBe(MIN_DRIVE_MS);
   });
 
   it('leaves out days without a path', () => {
@@ -61,7 +69,7 @@ describe('sampleTimeline', () => {
   });
 
   it('is halfway along the path at half of the drive time', () => {
-    const sample = sampleTimeline(timeline, MS_PER_DRIVE_HOUR / 2)!;
+    const sample = sampleTimeline(timeline, LEG_MS / 2)!;
 
     expect(sample.position.lng).toBeCloseTo(1, 3);
     expect(sample.drivenKm).toBeCloseTo(30, 3);
@@ -69,7 +77,7 @@ describe('sampleTimeline', () => {
   });
 
   it('waits at the end of a day before leaving for the next', () => {
-    const sample = sampleTimeline(timeline, MS_PER_DRIVE_HOUR + PAUSE_MS / 2)!;
+    const sample = sampleTimeline(timeline, LEG_MS + PAUSE_MS / 2)!;
 
     expect(sample.hasArrived).toBe(true);
     expect(sample.dayNumber).toBe('1');
@@ -77,7 +85,7 @@ describe('sampleTimeline', () => {
   });
 
   it('continues with the next day and counts what was driven before', () => {
-    const sample = sampleTimeline(timeline, MS_PER_DRIVE_HOUR + PAUSE_MS + MS_PER_DRIVE_HOUR / 2)!;
+    const sample = sampleTimeline(timeline, LEG_MS + PAUSE_MS + LEG_MS / 2)!;
 
     expect(sample.dayNumber).toBe('2');
     expect(sample.dayIndex).toBe(1);

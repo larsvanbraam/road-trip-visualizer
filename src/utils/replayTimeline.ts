@@ -26,12 +26,16 @@ export type ReplayTimeline = {
   totalMs: number;
 };
 
-/** One hour of driving takes this long in the replay, at normal speed */
-export const MS_PER_DRIVE_HOUR = 700;
+/**
+ * Every kilometer of road takes this long in the replay, at normal speed. The time follows the
+ * length of the path and not the drive time of the sheet, so the car moves at the same speed
+ * everywhere: a slow mountain road or a day without a drive time must not look like a dash.
+ */
+export const MS_PER_KM = 9;
 /** The car stays at the end of a day for a moment, so every stop is noticed */
 export const PAUSE_MS = 800;
 // Short drives would be over before they are seen
-const MIN_DRIVE_MINUTES = 30;
+export const MIN_DRIVE_MS = 500;
 
 const EARTH_RADIUS_M = 6_371_000;
 
@@ -47,8 +51,8 @@ function distanceBetween(a: LatLng, b: LatLng): number {
 }
 
 /**
- * Lay the days out on one timeline. Time is proportional to the drive time of a day, so a long day
- * takes visibly longer than a short one. Days without a path are left out.
+ * Lay the days out on one timeline. Time is proportional to the length of the route of a day, so a
+ * long day takes visibly longer than a short one and the car keeps the same speed. Days without a path are left out.
  */
 export function buildTimeline(days: Array<ReplayDayInput>): ReplayTimeline {
   const segments: Array<ReplaySegment> = [];
@@ -64,7 +68,8 @@ export function buildTimeline(days: Array<ReplayDayInput>): ReplayTimeline {
       return total;
     }, []);
 
-    const driveMs = (Math.max(day.minutes, MIN_DRIVE_MINUTES) / 60) * MS_PER_DRIVE_HOUR;
+    const length = cumulative[cumulative.length - 1];
+    const driveMs = Math.max((length / 1000) * MS_PER_KM, MIN_DRIVE_MS);
 
     segments.push({
       ...day,
@@ -73,7 +78,7 @@ export function buildTimeline(days: Array<ReplayDayInput>): ReplayTimeline {
       driveMs,
       endMs: cursor + driveMs + PAUSE_MS,
       cumulative,
-      length: cumulative[cumulative.length - 1],
+      length,
     });
     cursor += driveMs + PAUSE_MS;
   });

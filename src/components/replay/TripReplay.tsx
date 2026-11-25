@@ -24,6 +24,7 @@ type TripReplayProps = {
 
 const SPEEDS = [1, 2, 4] as const;
 const FOLLOW_ZOOM = 8;
+const MAX_FRAME_MS = 100;
 const TRAVELED_COLOR = '#7c2d12';
 
 const numberFormat = new Intl.NumberFormat('en', { maximumFractionDigits: 0 });
@@ -82,7 +83,9 @@ export function TripReplay({ days, directions, getMap, onDayChange, onClose }: T
 
     let last = performance.now();
     let frame = requestAnimationFrame(function tick(now) {
-      const delta = now - last;
+      // After the tab was in the background the clock must not jump ahead, so a frame counts for at
+      // most a tenth of a second
+      const delta = Math.min(now - last, MAX_FRAME_MS);
       last = now;
 
       setElapsed((previous) => Math.min(previous + delta * speed, timeline.totalMs));
