@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SheetSetupDialog } from '../../components/sheet-setup/SheetSetupDialog';
-import { TEMPLATE_COPY_URL } from '../../config/template';
+import { SAMPLE_SHEET_ID, TEMPLATE_COPY_URL } from '../../config/template';
 import { Logo } from '../../components/logo/Logo';
 import { ErrorAlert } from '../../components/error-alert/ErrorAlert';
 import { UserFacingError } from '../../utils/errors';
@@ -109,7 +109,7 @@ export function EnterSheetId() {
               autoFocus
               autoComplete="off"
               spellCheck={false}
-              placeholder="1Td_qAVfp4PauwQKY3MSXqOID1b..."
+              placeholder={`${SAMPLE_SHEET_ID.slice(0, 28)}...`}
               className="h-11 bg-card font-mono text-sm"
               value={localSheetId}
               onChange={(event) => setLocalSheetId(event.target.value)}
@@ -143,6 +143,16 @@ export function EnterSheetId() {
               >
                 Get the template
               </a>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  trackEvent('sample_trip_opened');
+                  onSelectSheetId(SAMPLE_SHEET_ID);
+                }}
+              >
+                Try the sample trip
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

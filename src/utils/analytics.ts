@@ -6,6 +6,7 @@ export type AnalyticsEvent =
   | 'recent_sheet_selected'
   | 'recent_sheet_removed'
   | 'template_clicked'
+  | 'sample_trip_opened'
   | 'setup_guide_opened'
   | 'sheet_loaded'
   | 'sheet_load_failed'
