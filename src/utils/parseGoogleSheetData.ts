@@ -18,6 +18,20 @@ const sheetColumnToRoadTripColumn: Record<string, keyof RoadTripStop> = {
 } as const;
 
 /**
+ * The Sheets API leaves out trailing empty cells, so a column can be missing from a row. Every field
+ * starts empty so the rest of the app can rely on them being strings.
+ */
+const emptyStop: RoadTripStop = {
+  dayNumber: '',
+  date: '',
+  morningLocation: '',
+  afternoonLocation: '',
+  eveningLocation: '',
+  time: '',
+  distance: '',
+};
+
+/**
  * A row is only part of the trip when it says where the day starts, goes or ends, or has driving.
  * Day numbers, dates and formulas that give "0 km" can be filled in down the whole sheet ahead of
  * time, so they say nothing.
@@ -41,14 +55,17 @@ function hasPlan(stop: RoadTripStop): boolean {
  */
 export function parseGoogleSheetData({ data }: Sheet): RoadTrip {
   const trip = data.map((row) =>
-    Object.entries(row).reduce((accumulator, [key, value]) => {
-      const mappedKey = sheetColumnToRoadTripColumn[key];
+    Object.entries(row).reduce(
+      (accumulator, [key, value]) => {
+        const mappedKey = sheetColumnToRoadTripColumn[key];
 
-      if (mappedKey) {
-        accumulator[mappedKey] = String(value);
-      }
-      return accumulator;
-    }, {} as RoadTripStop),
+        if (mappedKey) {
+          accumulator[mappedKey] = String(value);
+        }
+        return accumulator;
+      },
+      { ...emptyStop },
+    ),
   );
 
   const lastPlanned = trip.findLastIndex(hasPlan);

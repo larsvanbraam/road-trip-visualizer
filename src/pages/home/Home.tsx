@@ -116,15 +116,26 @@ export function Home() {
     if (activeDirections.length === 0) setRouteDirections(null);
   }, [activeDirections]);
 
-  const showDay = useCallback((day?: string) => {
-    setActiveDay(day);
-    setRouteError(undefined);
-  }, []);
-
   // What is known about each route, so the export can wait for the route of the day it shows
   const routeResults = useRef(new Map<string, RouteResult>());
   const routeWaiters = useRef<Array<{ routeId: string; resolve: (result: RouteResult) => void }>>(
     [],
+  );
+
+  // A failed route is tried again when its day is selected, so the old failure must not be reused
+  const forgetFailedRoutes = useCallback(() => {
+    routeResults.current.forEach((result, routeId) => {
+      if (result === 'failed') routeResults.current.delete(routeId);
+    });
+  }, []);
+
+  const showDay = useCallback(
+    (day?: string) => {
+      forgetFailedRoutes();
+      setActiveDay(day);
+      setRouteError(undefined);
+    },
+    [forgetFailedRoutes],
   );
 
   const settleRoute = useCallback((routeId: string, result: RouteResult) => {

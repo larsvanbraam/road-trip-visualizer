@@ -39,7 +39,17 @@ describe('parseGoogleSheetData', () => {
       sheet([{ Day: '2', 'Morning location (address)': 'Ghent', Hotel: 'Ibis', Notes: 'x' }]),
     );
 
-    expect(stop).toEqual({ dayNumber: '2', morningLocation: 'Ghent' });
+    expect(stop).toMatchObject({ dayNumber: '2', morningLocation: 'Ghent' });
+    expect(stop).not.toHaveProperty('Hotel');
+  });
+
+  it('fills columns the sheet left out with empty strings', () => {
+    const [stop] = parseGoogleSheetData(
+      sheet([{ Day: '4', 'Morning location (address)': 'Ghent' }]),
+    );
+
+    expect(stop.distance).toBe('');
+    expect(stop.time).toBe('');
   });
 
   it('converts non-string cell values to strings', () => {
@@ -47,7 +57,7 @@ describe('parseGoogleSheetData', () => {
       sheet([{ Day: 3, 'Morning location (address)': 'Ghent', 'Distance (km)': 0 }]),
     );
 
-    expect(stop).toEqual({ dayNumber: '3', morningLocation: 'Ghent', distance: '0' });
+    expect(stop).toMatchObject({ dayNumber: '3', morningLocation: 'Ghent', distance: '0' });
   });
 
   it('returns an empty trip for an empty sheet', () => {
