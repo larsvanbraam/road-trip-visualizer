@@ -282,7 +282,7 @@ export function Home() {
         )}
       </div>
 
-      <aside className="glass absolute inset-x-3 bottom-8 z-10 max-h-[45vh] overflow-hidden rounded-2xl md:inset-y-3 md:right-auto md:bottom-10 md:max-h-none md:w-[380px]">
+      <aside className="glass absolute inset-x-3 bottom-8 z-10 max-h-[45vh] overflow-hidden rounded-2xl md:inset-y-8 md:right-auto md:max-h-none md:w-[380px]">
         <Sidebar
           title={tripTitle}
           data={travelDayData}
@@ -348,7 +348,7 @@ export function Home() {
           activeDay={activeDay}
           replayDay={replayDay}
           onDayClick={onShowRouteClick}
-          className="absolute z-10 hidden md:bottom-10 md:left-[404px] md:block md:w-[min(640px,calc(100vw-404px-240px))]"
+          className="absolute z-10 hidden md:bottom-8 md:left-[404px] md:block md:w-[min(640px,calc(100vw-404px-240px))]"
         />
       )}
 
