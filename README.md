@@ -40,6 +40,9 @@ felt clunky and meant maintaining two sources, as our planning lived in Google S
 
 So I thought: "Why not do it myself? 🤔" And so this project was born. 💪
 
+The first version was built entirely by me. For v2, I teamed up with [Claude](https://claude.com/claude-code),
+which did a good chunk of the rework while I steered the direction and reviewed the result. 🤖
+
 ## 🌍 Live demo
 
 Want to see it in action first? Open **[roadtrip.larsvanbraam.nl](https://roadtrip.larsvanbraam.nl)**.
