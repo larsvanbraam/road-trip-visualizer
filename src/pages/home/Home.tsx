@@ -341,10 +341,10 @@ export function Home() {
 
   // The tab shows which trip is open, which helps when several are open at once
   useEffect(() => {
-    document.title = tripTitle ? `${tripTitle} · Road Trip Visualizer` : 'Road Trip Visualizer';
+    document.title = tripTitle ? `${tripTitle} · Roadtrip Visualizer` : 'Roadtrip Visualizer';
 
     return () => {
-      document.title = 'Road Trip Visualizer';
+      document.title = 'Roadtrip Visualizer';
     };
   }, [tripTitle]);
 

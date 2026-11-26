@@ -38,7 +38,7 @@ const EXPORT_SIZE = { width: 1280, height: 720 };
 const SETTLE_DELAY_MS = 700;
 const IDLE_TIMEOUT_MS = 2500;
 const NOTICE_DURATION_MS = 15_000;
-const ZIP_FILE_NAME = 'road-trip-screenshots.zip';
+const ZIP_FILE_NAME = 'roadtrip-screenshots.zip';
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 

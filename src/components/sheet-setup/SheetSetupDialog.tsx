@@ -62,7 +62,7 @@ export function SheetSetupDialog({ open, onOpenChange }: SheetSetupDialogProps) 
         <DialogHeader>
           <DialogTitle>Set up your trip sheet</DialogTitle>
           <DialogDescription>
-            Road Trip Visualizer reads your trip from a Google Sheet. Start from the template, it
+            Roadtrip Visualizer reads your trip from a Google Sheet. Start from the template, it
             works out distances and drive times for you.
           </DialogDescription>
         </DialogHeader>

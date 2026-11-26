@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚐 Road Trip Visualiser
+# 🚐 Roadtrip Visualizer
 
 **Turn your road trip spreadsheet into an interactive map.**
 
@@ -8,7 +8,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white&style=flat-square)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white&style=flat-square)
 ![Google Maps](https://img.shields.io/badge/Google_Maps-API-4285f4?logo=googlemaps&logoColor=white&style=flat-square)
-![License](https://img.shields.io/github/license/larsvanbraam/road-trip-visualizer?style=flat-square)
+![License](https://img.shields.io/github/license/larsvanbraam/roadtrip-visualizer?style=flat-square)
 
 **[🌍 Try the live demo](https://roadtrip.larsvanbraam.nl)**
 

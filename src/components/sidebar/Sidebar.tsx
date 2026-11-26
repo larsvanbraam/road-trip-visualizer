@@ -58,7 +58,7 @@ function Sidebar({ title, data, activeDay, onDayClick, onFullOverviewClick }: Si
       >
         <span className="flex min-w-0 grow flex-col gap-0.5 border-l-[3px] border-brand pl-3">
           <span className="truncate text-base leading-tight font-bold">
-            {title ?? 'Road Trip Visualizer'}
+            {title ?? 'Roadtrip Visualizer'}
           </span>
           <span className="truncate text-xs text-muted-foreground tabular-nums">
             {stats.days} days · {numberFormat.format(stats.distanceKm)} km ·{' '}

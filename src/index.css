@@ -128,7 +128,7 @@
     @apply font-sans;
   }
 }
-/* Road Trip Visualizer theme: warm paper background, ink primary, orange accent */
+/* Roadtrip Visualizer theme: warm paper background, ink primary, orange accent */
 :root {
   --background: #f6f5f1;
   --foreground: #000b0d;

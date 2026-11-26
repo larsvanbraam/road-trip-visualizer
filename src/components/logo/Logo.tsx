@@ -12,7 +12,7 @@ export function LogoMark({ className }: LogoMarkProps) {
     <svg
       viewBox="0 0 40 40"
       role="img"
-      aria-label="Road Trip Visualizer"
+      aria-label="Roadtrip Visualizer"
       className={cn('size-9 shrink-0', className)}
     >
       <rect width="40" height="40" rx="11" fill="#000b0d" />
